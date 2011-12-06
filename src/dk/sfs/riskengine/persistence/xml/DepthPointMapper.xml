@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="dk.sfs.riskengine.persistence.mapper.DepthPointMapper" >
+  
+  
+  
+  <resultMap id="BaseResultMap" type="dk.sfs.riskengine.persistence.domain.DepthPoint">
+    
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="lat" property="lat" jdbcType="DOUBLE" />
+    <result column="lon" property="lon" jdbcType="DOUBLE" />
+    <result column="latp" property="latp" jdbcType="DOUBLE" />
+    <result column="lonp" property="lonp" jdbcType="DOUBLE" />
+    <result column="n" property="n" jdbcType="INTEGER" />
+    <result column="m" property="m" jdbcType="INTEGER" />
+    <result column="depth" property="depth" jdbcType="DOUBLE" />
+  </resultMap>
+  
+  
+  <sql id="Base_Column_List" >
+    
+    id, lat, lon, latp, lonp, n, m, depth
+  </sql>
+  
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from depth_denmark
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  
+  <select id="selectByIndices" resultMap="BaseResultMap" parameterType="dk.sfs.riskengine.persistence.domain.DepthPoint" >
+    
+    select 
+    <include refid="Base_Column_List" />
+    from depth_denmark
+    where m= #{m,jdbcType=INTEGER}
+    and n= #{n,jdbcType=INTEGER}
+  </select>
+  
+   <select id="findClosestDeepPoint" resultMap="BaseResultMap" parameterType="map" >
+    
+    SELECT lat, lon,n,m, depth, SQRT(
+	POW(69.1 * (lat - #{lat,jdbcType=DOUBLE}), 2) +
+	POW(69.1 * (#{lon,jdbcType=DOUBLE} - lon) * COS(lat / 57.3), 2)) AS distance
+	FROM depth_denmark 
+	HAVING distance <![CDATA[<]]> 0.1
+	ORDER BY distance
+	limit 0,1;
+    
+  </select>
+  
+   <sql id="DepthRatioSql" >
+     and (depth is null or depth <![CDATA[>]]> #{depth,jdbcType=DOUBLE})
+   	 and #{ratioM,jdbcType=INTEGER}*(m-#{m,jdbcType=INTEGER}) = #{ratioN,jdbcType=INTEGER}*(n-#{n,jdbcType=INTEGER})
+    
+  </sql>
+   <select id="findGroundingPointSE" resultMap="DistanceResultMap" parameterType="map" >
+    
+    select max(m) m, min(n) n 
+    from depth_denmark 
+    where m<![CDATA[<]]>#{m,jdbcType=INTEGER}
+    and n<![CDATA[>]]>#{n,jdbcType=INTEGER}
+   <include refid="DepthRatioSql" />
+    
+  </select>
+  
+   <select id="findGroundingPointNW" resultMap="DistanceResultMap" parameterType="map" >
+    
+   select min(m) m, max(n) n
+    from depth_denmark
+    where m<![CDATA[>]]>#{m,jdbcType=INTEGER}
+    and n<![CDATA[<]]>#{n,jdbcType=INTEGER}
+  	<include refid="DepthRatioSql" />
+      
+  </select>
+  
+   <select id="findGroundingPointIndices" resultMap="BaseResultMap" parameterType="map" >
+    
+     select 
+     <choose>
+     <when test="ratioM > 0">
+     	min(m) m,
+     </when>
+     <when test="0 > ratioM ">
+     	max(m) m,
+     </when>
+     <when test="ratioM==0 ">
+     	m,
+     </when>
+     </choose> 
+     <choose>
+     <when test="ratioN > 0">
+     	min(n) n
+     </when>
+     <when test="0 > ratioN">
+     	max(n) n
+     </when>
+     <when test="ratioN==0 ">
+     	n 
+     </when>
+     </choose>
+    from depth_denmark
+    where 
+    <choose>
+     <when test="ratioM > 0">
+     	m<![CDATA[>]]>#{m,jdbcType=INTEGER}
+     </when>
+     <when test="0 > ratioM">
+     	m<![CDATA[<]]>#{m,jdbcType=INTEGER}
+     </when>
+     <when test="ratioM==0">
+     	m=#{m,jdbcType=INTEGER}
+     </when>
+     </choose>      
+     and
+     <choose>
+     <when test="ratioN > 0">
+     	n<![CDATA[>]]>#{n,jdbcType=INTEGER}
+     </when>
+     <when test="0 > ratioN">
+     	n<![CDATA[<]]>#{n,jdbcType=INTEGER}
+     </when>
+      <when test="ratioN==0">
+     	n=#{n,jdbcType=INTEGER}
+     </when>
+     </choose>
+     and (depth is null or depth <![CDATA[>]]> #{depth,jdbcType=DOUBLE})
+     <if test="ratioM != 0 and ratioN!=0">
+   	 and #{ratioN,jdbcType=INTEGER}*(m-#{m,jdbcType=INTEGER}) = #{ratioM,jdbcType=INTEGER}*(n-#{n,jdbcType=INTEGER})
+   	 </if>
+  
+    
+  </select>
+  
+  <select id="findGroundingPointSW" resultMap="DistanceResultMap" parameterType="map" >
+    
+  select max(m) m, max(n) n   
+    from depth_denmark
+    where m<![CDATA[<]]>#{m,jdbcType=INTEGER}
+    and n<![CDATA[<]]>#{n,jdbcType=INTEGER}
+   <include refid="DepthRatioSql" />
+    
+  </select>
+  
+ 
+ 
+  
+ 
+</mapper>

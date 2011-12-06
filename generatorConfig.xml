@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+  PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+  "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<generatorConfiguration>
+  
+
+  <context id="mysql" targetRuntime="MyBatis3">
+    <jdbcConnection driverClass="com.mysql.jdbc.Driver"
+        connectionURL="jdbc:mysql://linux06.fomfrv.dk:3306/enav_p"
+        userId="enav_p_user"
+        password="aditus">
+    </jdbcConnection>
+
+    <javaTypeResolver >
+      <property name="forceBigDecimals" value="false" />
+    </javaTypeResolver>
+
+    <javaModelGenerator targetPackage="dk.sfs.riskengine.persistence.domain" targetProject="riskEngine\src">
+      <property name="enableSubPackages" value="true" />
+      <property name="trimStrings" value="true" />
+    </javaModelGenerator>
+
+    <sqlMapGenerator targetPackage="dk.sfs.riskengine.persistence.xml"  targetProject="riskEngine\src">
+      <property name="enableSubPackages" value="true" />
+    </sqlMapGenerator>
+
+    <javaClientGenerator type="XMLMAPPER" targetPackage="dk.sfs.riskengine.persistence.mapper"  targetProject="riskEngine\src">
+      <property name="enableSubPackages" value="true" />
+    </javaClientGenerator>
+
+    <!--  
+    <table schema="mysql" tableName="loyds_ships" domainObjectName="Vessel" 
+    enableDeleteByExample="false" enableCountByExample="false" enableSelectByExample="false" enableUpdateByExample="false" enableSelectByPrimaryKey="true">
+      <property name="useActualColumnNames" value="false"/>
+     
+      <columnOverride column="class" property="class_" />
+      
+    </table>
+
+
+	<table schema="mysql" tableName="ais_vessel_position" domainObjectName="AisVesselPosition" 
+    enableDeleteByExample="false" enableCountByExample="false" enableSelectByExample="false" enableUpdateByExample="false" enableSelectByPrimaryKey="true">
+      <property name="useActualColumnNames" value="false"/>
+     
+      
+      
+    </table>
+    -->
+    
+	<table schema="mysql" tableName="depth_denmark" domainObjectName="DepthPoint" 
+    enableDeleteByExample="false" enableCountByExample="false" enableSelectByExample="false" enableUpdateByExample="false" enableSelectByPrimaryKey="true">
+      <property name="useActualColumnNames" value="false"/>
+      </table>
+  </context>
+</generatorConfiguration>
