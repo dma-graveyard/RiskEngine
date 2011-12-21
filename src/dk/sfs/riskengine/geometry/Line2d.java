@@ -1,5 +1,6 @@
 package dk.sfs.riskengine.geometry;
 
+
 public class Line2d {
 	
 	public Point2d p1;
@@ -103,8 +104,8 @@ public class Line2d {
 		p1.setLatLon(lon0, lat0);
 		p2.setLatLon(lon0, lat0);
 		
-		
-		Point2d u=Point2d.getUnitVector(angleDeg);
+		Point2d u=new Point2d();
+		u=u.getUnitVector(angleDeg);
 		u=u.getPerpVector();
 		
 		if (pointIsMidpoint) {
@@ -129,8 +130,8 @@ public void setLineEqualToAngle(double lon0, double lat0, double lineLength, dou
 		p1.setLatLon(lon0, lat0);
 		p2.setLatLon(lon0, lat0);
 		
-		
-		Point2d u=Point2d.getUnitVector(angleDeg);
+		Point2d u=new Point2d();
+		u=u.getUnitVector(angleDeg);
 		
 		if (pointIsMidpoint) {
 			p1.x+=u.x*lineLength/2.0;

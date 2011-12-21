@@ -9,8 +9,6 @@
     <id column="id" property="id" jdbcType="INTEGER" />
     <result column="lat" property="lat" jdbcType="DOUBLE" />
     <result column="lon" property="lon" jdbcType="DOUBLE" />
-    <result column="latp" property="latp" jdbcType="DOUBLE" />
-    <result column="lonp" property="lonp" jdbcType="DOUBLE" />
     <result column="n" property="n" jdbcType="INTEGER" />
     <result column="m" property="m" jdbcType="INTEGER" />
     <result column="depth" property="depth" jdbcType="DOUBLE" />
@@ -19,13 +17,13 @@
   
   <sql id="Base_Column_List" >
     
-    id, lat, lon, latp, lonp, n, m, depth
+    id, lat, lon, n, m, depth
   </sql>
   
   <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
     select 
     <include refid="Base_Column_List" />
-    from depth_denmark
+    from depth_denmark100m
     where id = #{id,jdbcType=INTEGER}
   </select>
   
@@ -33,7 +31,7 @@
     
     select 
     <include refid="Base_Column_List" />
-    from depth_denmark
+    from depth_denmark100m
     where m= #{m,jdbcType=INTEGER}
     and n= #{n,jdbcType=INTEGER}
   </select>
@@ -43,7 +41,7 @@
     SELECT lat, lon,n,m, depth, SQRT(
 	POW(69.1 * (lat - #{lat,jdbcType=DOUBLE}), 2) +
 	POW(69.1 * (#{lon,jdbcType=DOUBLE} - lon) * COS(lat / 57.3), 2)) AS distance
-	FROM depth_denmark 
+	FROM depth_denmark100m 
 	HAVING distance <![CDATA[<]]> 0.1
 	ORDER BY distance
 	limit 0,1;
@@ -55,20 +53,20 @@
    	 and #{ratioM,jdbcType=INTEGER}*(m-#{m,jdbcType=INTEGER}) = #{ratioN,jdbcType=INTEGER}*(n-#{n,jdbcType=INTEGER})
     
   </sql>
-   <select id="findGroundingPointSE" resultMap="DistanceResultMap" parameterType="map" >
+   <select id="findGroundingPointSE" resultMap="BaseResultMap" parameterType="map" >
     
     select max(m) m, min(n) n 
-    from depth_denmark 
+    from depth_denmark100m 
     where m<![CDATA[<]]>#{m,jdbcType=INTEGER}
     and n<![CDATA[>]]>#{n,jdbcType=INTEGER}
    <include refid="DepthRatioSql" />
     
   </select>
   
-   <select id="findGroundingPointNW" resultMap="DistanceResultMap" parameterType="map" >
+   <select id="findGroundingPointNW" resultMap="BaseResultMap" parameterType="map" >
     
    select min(m) m, max(n) n
-    from depth_denmark
+    from depth_denmark100m
     where m<![CDATA[>]]>#{m,jdbcType=INTEGER}
     and n<![CDATA[<]]>#{n,jdbcType=INTEGER}
   	<include refid="DepthRatioSql" />
@@ -100,7 +98,7 @@
      	n 
      </when>
      </choose>
-    from depth_denmark
+    from depth_denmark100m
     where 
     <choose>
      <when test="ratioM > 0">
@@ -133,10 +131,10 @@
     
   </select>
   
-  <select id="findGroundingPointSW" resultMap="DistanceResultMap" parameterType="map" >
+  <select id="findGroundingPointSW" resultMap="BaseResultMap" parameterType="map" >
     
   select max(m) m, max(n) n   
-    from depth_denmark
+    from depth_denmark100m
     where m<![CDATA[<]]>#{m,jdbcType=INTEGER}
     and n<![CDATA[<]]>#{n,jdbcType=INTEGER}
    <include refid="DepthRatioSql" />

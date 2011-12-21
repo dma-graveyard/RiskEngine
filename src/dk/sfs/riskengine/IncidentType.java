@@ -7,43 +7,60 @@ import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 
-import com.mysql.jdbc.interceptors.SessionAssociationInterceptor;
-
 import dk.sfs.riskengine.ais.RiskTarget;
 import dk.sfs.riskengine.geometry.CPA;
 import dk.sfs.riskengine.geometry.Geofunctions;
 import dk.sfs.riskengine.geometry.Point2d;
 import dk.sfs.riskengine.metoc.Metoc;
 import dk.sfs.riskengine.persistence.domain.DepthPoint;
+import dk.sfs.riskengine.persistence.mapper.AccidentFrequenceMapper;
 import dk.sfs.riskengine.persistence.mapper.DBSessionFactory;
-import dk.sfs.riskengine.persistence.mapper.DepthPointMapper;
 
 public abstract class IncidentType {
 
 	protected Metoc metoc;
 	protected RiskTarget vessel;
 
+	public enum AccidentType{
+			COLLISION,
+			FOUNDERING,
+			HULLFAILURE,        
+			MACHINERYFAILURE,   
+			FIRE_EXPLOSION,     
+			POWEREDGROUNDING,   
+			DRIFTGROUNDING
+			}
+	
+	public enum ShipSize{
+		SMALL, MEDIUM, LARGE;
+	}
+	
 	/**
 	 * @param cog
-	 * @param winddirection
-	 *            compass angle FROM where the wind is blowing
-	 * @param windspeed
-	 *            in m/s
-	 * @param currentdirection
-	 *            compass direction IN which the water is flowing
-	 * @param currentspeed
-	 *            in knots
+	 * 
 	 */
-	public IncidentType(Metoc metoc, RiskTarget vessel) {
+	public IncidentType(Metoc metoc, RiskTarget target) {
 		super();
+		this.vessel = target;
 		this.metoc = metoc;
-		this.vessel = vessel;
 	}
 
 	public double getTotalRisk() {
-		return getAgeFactor(new GregorianCalendar().get(Calendar.YEAR) - vessel.getYearOfBuild())
-				* getFlagFactor(vessel.getFlag()) * getWindcurrentFactor() * getVisibilityFactor() * getExposure()
-				* getCasualtyRate();
+		double c = 1.0;
+		if (vessel.hasStaticInfo()) {
+			// requires static info
+			c *= getCasualtyRate(vessel.getShipTypeIwrap(), vessel.getLength());
+			
+			if (vessel.getYearOfBuild() != null) {
+
+				c *= getAgeFactor(new GregorianCalendar().get(Calendar.YEAR) - vessel.getYearOfBuild());
+			}
+			if (vessel.getFlag() != null) {
+				c *= getFlagFactor(vessel.getFlag());
+			}
+			
+		}
+		return c*getWindcurrentFactor() * getVisibilityFactor() * getExposure();
 
 	}
 
@@ -67,11 +84,12 @@ public abstract class IncidentType {
 	}
 
 	/**
+	 *  Override for incident specific visiblity factor when visibility is availaible.
 	 * @param visibility
-	 *            in m Override for incident specific wind factor
+	 *           
 	 * @return
 	 */
-	public double getVisibilityFactor() {
+	public final double getVisibilityFactor() {
 		return 1.0;
 	}
 
@@ -89,21 +107,44 @@ public abstract class IncidentType {
 		return 1.0;
 	}
 
-	public double getCasualtyRate() {
-		String shiptype = vessel.getShipTypeIwrap();
-		double shipsize = vessel.getLength();
-		return getNumberOfIncidentPerMinut(shiptype, shipsize) / getNumberOfShipsByTypeAndSize(shiptype, shipsize);
+	public double getCasualtyRate(String shipTypeIwrap, double shipsize) {
+		
+		SqlSession sess = DBSessionFactory.getSession();
+
+		try {
+			AccidentFrequenceMapper mapper = sess.getMapper(AccidentFrequenceMapper.class);			
+			Map<String, Object> map = new HashMap<String, Object>();
+			map.put("accidentTypeName", getAccidentType().name());
+			map.put("shipTypename", shipTypeIwrap);
+			ShipSize size;
+			if(shipsize>100){
+				size = ShipSize.LARGE;
+			}else if(shipsize>100){
+				size = ShipSize.SMALL;
+			} else{
+				size = ShipSize.MEDIUM;
+			}
+			
+			map.put("shipSize", size.name());
+			return mapper.selectByShipTypeAndAccidentType(map);
+		} finally {
+			sess.close();
+		}
+		
 	}
 
-	public abstract double getNumberOfIncidentPerMinut(String shiptype, double shipsize);
+	
+	
+	
+	public static Double selectByAvgByAccidentType(String accidentName){
+		SqlSession sess = DBSessionFactory.getSession();
 
-	/**
-	 * TODO implement
-	 * 
-	 * @return
-	 */
-	private int getNumberOfShipsByTypeAndSize(String shiptype, double shipsize) {
-		return 30;
+		try {
+			AccidentFrequenceMapper mapper = sess.getMapper(AccidentFrequenceMapper.class);			
+			return mapper.selectByAvgByAccidentType(accidentName);
+		} finally {
+			sess.close();
+		}
 	}
 
 	/**
@@ -159,51 +200,19 @@ public abstract class IncidentType {
 	 */
 
 	protected double getTimeToGrounding(double speed, double direction) {
-		SqlSession sess = DBSessionFactory.getSession();
-		try {
-			 
-			DepthPointMapper mapper = sess.getMapper(DepthPointMapper.class);
 
-			/*
-			 * Find closest deep point.
-			 */
-			Map<String, Object> map = new HashMap<String, Object>();
-			map.put("lat", vessel.getGeoLocation().getLatitude());
-			map.put("lon", vessel.getGeoLocation().getLongitude());
-			DepthPoint p = mapper.findClosestDeepPoint(map);
-
-			/*
-			 * Find first grounding point in direction
-			 */
-
-			double angle = Geofunctions.d2r(Geofunctions.compass2cartesian(direction));
-
-			Long ratioM = Math.round(Math.sin(angle) * 10l);
-			Long ratioN = Math.round(Math.cos(angle) * 10l);
-
-			map.put("m", p.getM());
-			map.put("n", p.getN());
-			map.put("ratioM", ratioM);
-			map.put("ratioN", ratioN);
-			map.put("depth", vessel.getDraught());
-
-			DepthPoint ground = mapper.findGroundingPointIndices(map);
-			ground = mapper.selectByIndices(ground);
-
-			/*
-			 * get distance from ship to grounding point
-			 */
-			Point2d pos = new Point2d();
-			pos.setLatLon(vessel.getGeoLocation().getLongitude(), vessel.getGeoLocation().getLatitude());
-			double dist = pos.distanceLatLon(ground.getLon(), ground.getLat());
-
-			/*
-			 * return time to grounding
-			 */
-			return dist / CPA.KnotsToMs(speed);
-		} finally {
-			sess.close();
-		}
+		DepthPoint ground = DepthPoint.findGroundingPoint(vessel.getPos(), direction, vessel.getDraught());
+		/*
+		 * get distance from ship to grounding point
+		 */
+		Point2d pos = new Point2d();
+		pos.setLatLon(vessel.getGeoLocation().getLongitude(), vessel.getGeoLocation().getLatitude());
+		double dist = pos.distanceLatLon(ground.getLon(), ground.getLat());
+		/*
+		 * return time to grounding
+		 */
+		return dist / CPA.KnotsToMs(speed);
 	}
 
+	public abstract AccidentType getAccidentType();
 }

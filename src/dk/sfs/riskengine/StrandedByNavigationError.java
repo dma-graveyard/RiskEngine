@@ -1,15 +1,16 @@
 package dk.sfs.riskengine;
 
+import dk.sfs.riskengine.IncidentType.AccidentType;
 import dk.sfs.riskengine.ais.RiskTarget;
 import dk.sfs.riskengine.geometry.Point2d;
 import dk.sfs.riskengine.metoc.Metoc;
 
 public class StrandedByNavigationError extends IncidentType {
 
-	private static final int TIME_TO_REPAIR = 30*60; // 30 min.
 	
-	public StrandedByNavigationError(Metoc metoc, RiskTarget vessel) {
-		super(metoc, vessel);
+	
+	public StrandedByNavigationError(Metoc metoc,RiskTarget vessel) {
+		super(metoc,vessel);
 		
 	}
 
@@ -18,11 +19,7 @@ public class StrandedByNavigationError extends IncidentType {
 		return 0.04;
 	}
 
-	@Override
-	public double getNumberOfIncidentPerMinut(String shiptype, double shipsize) {
-		
-		return 0.005;
-	}
+	
 
 	@Override
 	public double getExposure() {
@@ -35,10 +32,14 @@ public class StrandedByNavigationError extends IncidentType {
 		return 0;
 	}
 
-	@Override
-	public double getVisibilityFactor() {
+	
+	public double getVisibilityFactor_() {
 		return 0.9+Math.exp(-metoc.getVisibility()*0.0007)*10l;
 	}
 
-	
+	@Override
+	public AccidentType getAccidentType() {
+		return AccidentType.POWEREDGROUNDING;
+	}
+
 }

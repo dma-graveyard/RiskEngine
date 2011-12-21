@@ -43,15 +43,25 @@
 	<table schema="mysql" tableName="ais_vessel_position" domainObjectName="AisVesselPosition" 
     enableDeleteByExample="false" enableCountByExample="false" enableSelectByExample="false" enableUpdateByExample="false" enableSelectByPrimaryKey="true">
       <property name="useActualColumnNames" value="false"/>
-     
-      
-      
     </table>
-    -->
+    
     
 	<table schema="mysql" tableName="depth_denmark" domainObjectName="DepthPoint" 
     enableDeleteByExample="false" enableCountByExample="false" enableSelectByExample="false" enableUpdateByExample="false" enableSelectByPrimaryKey="true">
       <property name="useActualColumnNames" value="false"/>
       </table>
+       -->
+    <table schema="mysql" tableName="accident_frequence" domainObjectName="AccidentFrequence" 
+    enableDeleteByExample="false" enableCountByExample="false" enableSelectByExample="false" enableUpdateByExample="false" enableSelectByPrimaryKey="true">
+      <property name="useActualColumnNames" value="false"/>
+    </table>
+    <table schema="mysql" tableName="accident_type" domainObjectName="AccidentType" 
+    enableDeleteByExample="false" enableCountByExample="false" enableSelectByExample="false" enableUpdateByExample="false" enableSelectByPrimaryKey="true">
+      <property name="useActualColumnNames" value="false"/>
+    </table>
+    <table schema="mysql" tableName="ship_type_iwrap" domainObjectName="ShipTypeIwrap" 
+    enableDeleteByExample="false" enableCountByExample="false" enableSelectByExample="false" enableUpdateByExample="false" enableSelectByPrimaryKey="true">
+      <property name="useActualColumnNames" value="false"/>
+    </table>
   </context>
 </generatorConfiguration>

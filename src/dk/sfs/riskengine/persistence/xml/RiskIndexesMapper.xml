@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="dk.sfs.riskengine.persistence.mapper.RiskIndexesMapper" >
+  <resultMap id="BaseResultMap" type="dk.sfs.riskengine.persistence.domain.RiskIndexes" >
+  
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="mmsi" property="mmsi" jdbcType="INTEGER" />
+    <result column="collision" property="collision" jdbcType="DOUBLE" />
+    <result column="fire_explosion" property="fireExplosion" jdbcType="DOUBLE" />
+    <result column="foundering" property="foundering" jdbcType="DOUBLE" />
+    <result column="hull_failure" property="hullFailure" jdbcType="DOUBLE" />
+    <result column="machinery_failure" property="machineryFailure" jdbcType="DOUBLE" />
+    <result column="stranded_by_machine_failure" property="strandedByMachineFailure" jdbcType="DOUBLE" />
+    <result column="stranded_by_navigation_error" property="strandedByNavigationError" jdbcType="DOUBLE" />
+    
+    <result column="datetime_created" property="dateTimeCreated" jdbcType="TIMESTAMP" />
+    
+    <result column="ship_type" property="shipType" jdbcType="VARCHAR" />
+    <result column="length" property="length" jdbcType="DOUBLE" />
+    <result column="draught" property="draught" jdbcType="DOUBLE" />
+    <result column="flag" property="flag" jdbcType="VARCHAR" />
+    <result column="year_of_build" property="yearOfBuild" jdbcType="INTEGER" />
+      
+    <result column="cog" property="cog" jdbcType="DOUBLE" />
+    <result column="sog" property="sog" jdbcType="DOUBLE" />
+    <result column="cpa_time" property="cpaTime" jdbcType="DOUBLE" />
+    <result column="cpa_dist" property="cpaDist" jdbcType="DOUBLE" />
+    <result column="cpa_target_mmsi" property="cpaTargetMmsi" jdbcType="INTEGER" />
+    <result column="lat" property="lat" jdbcType="DOUBLE" />
+    <result column="lon" property="lon" jdbcType="DOUBLE" />
+    <result column="cog" property="cog" jdbcType="DOUBLE" />
+    <result column="sog" property="sog" jdbcType="DOUBLE" />
+    
+    <result column="ship_name" property="nameOfShip" jdbcType="VARCHAR" />
+    
+    <result column="cpa_lat" property="cpaLat" jdbcType="DOUBLE" />
+    <result column="cpa_lon" property="cpaLon" jdbcType="DOUBLE" />
+    <result column="cpa_cog" property="cpaCog" jdbcType="DOUBLE" />
+    <result column="cpa_sog" property="cpaSog" jdbcType="DOUBLE" />
+    
+  </resultMap>
+  
+  <sql id="Base_Column_List" >
+    id, mmsi, collision, fire_explosion, foundering, hull_failure, machinery_failure, 
+    stranded_by_machine_failure, stranded_by_navigation_error,  datetime_created, ship_type ,
+    length ,draught ,flag ,year_of_build, cog, sog, cpa_time, cpa_dist, cpa_target_mmsi, lat,lon, ship_name,cpa_lat,cpa_lon,cpa_cog,cpa_sog
+    
+  </sql>
+  
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from risk_indexes
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  
+   <select id="selectLatest" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from risk_indexes
+    where cpa_time is not null order by datetime_created asc
+  </select>
+  <insert id="insert" parameterType="dk.sfs.riskengine.persistence.domain.RiskIndexes" >
+  
+    insert into risk_indexes ( mmsi, collision, 
+      fire_explosion, foundering, hull_failure, 
+      machinery_failure, stranded_by_machine_failure, 
+      stranded_by_navigation_error,datetime_created, ship_type ,
+      length ,draught ,flag ,year_of_build,cog, sog, cpa_time, 
+      cpa_dist, cpa_target_mmsi, lat, lon, ship_name, cpa_lat,cpa_lon,cpa_sog, cpa_cog)
+    values ( #{mmsi,jdbcType=INTEGER}, #{collision,jdbcType=DOUBLE}, 
+      #{fireExplosion,jdbcType=DOUBLE}, #{foundering,jdbcType=DOUBLE}, #{hullFailure,jdbcType=DOUBLE}, 
+      #{machineryFailure,jdbcType=DOUBLE}, #{strandedByMachineFailure,jdbcType=DOUBLE}, 
+      #{strandedByNavigationError,jdbcType=DOUBLE},  #{dateTimeCreated,jdbcType=TIMESTAMP}, 
+      #{shipType,jdbcType=VARCHAR}, #{length,jdbcType=DOUBLE}, #{draught,jdbcType=DOUBLE},
+      #{flag,jdbcType=VARCHAR}, #{yearOfBuild,jdbcType=INTEGER},#{cog,jdbcType=DOUBLE}, #{sog,jdbcType=DOUBLE}, #{cpaTime,jdbcType=DOUBLE}, 
+      #{cpaDist,jdbcType=DOUBLE},#{cpaTargetMmsi,jdbcType=INTEGER},
+      #{lat,jdbcType=DOUBLE},#{lon,jdbcType=DOUBLE},#{nameOfShip,jdbcType=VARCHAR},
+      #{cpaLat,jdbcType=DOUBLE},#{cpaLon,jdbcType=DOUBLE}, #{cpaSog,jdbcType=DOUBLE},#{cpaCog,jdbcType=DOUBLE}
+      )
+  </insert>
+  
+ 
+</mapper>

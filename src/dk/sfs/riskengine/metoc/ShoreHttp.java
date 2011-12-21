@@ -64,8 +64,8 @@ public class ShoreHttp {
 	private HttpClient httpClient;
 	private PostMethod method;
 	
-	private String serverName = "enav.frv.dk";
-	private int httpPort = 80;
+	private String serverName = "localhost";
+	private int httpPort = 8080;
 	private int connectTimeout = 30000;
 	private int readTimeout = 60000;
 	
@@ -97,6 +97,7 @@ public class ShoreHttp {
 
 		try {
 			responseBody = method.getResponseBody();
+
 
 			// Check for GZip content encoding
 			Header contentEncoding = method.getResponseHeader("Content-Encoding");
@@ -165,7 +166,7 @@ public class ShoreHttp {
 		this.uri = uri;
 		this.url = "http://" + serverName;
 		if (httpPort != 80) {
-			this.url += ":" + serverName;
+			this.url += ":" + httpPort;
 		}
 		this.url += this.uri;
 	}

@@ -17,5 +17,6 @@ PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
 	<mappers>
 		<mapper resource="dk/sfs/riskengine/persistence/xml/VesselMapper.xml" />
 		<mapper resource="dk/sfs/riskengine/persistence/xml/DepthPointMapper.xml" />
+		<mapper resource="dk/sfs/riskengine/persistence/xml/RiskIndexesMapper.xml" />
 	</mappers>
 </configuration>

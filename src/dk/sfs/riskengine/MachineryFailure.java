@@ -1,5 +1,6 @@
 package dk.sfs.riskengine;
 
+import dk.sfs.riskengine.IncidentType.AccidentType;
 import dk.sfs.riskengine.ais.RiskTarget;
 import dk.sfs.riskengine.geometry.Point2d;
 import dk.sfs.riskengine.metoc.Metoc;
@@ -8,8 +9,8 @@ import dk.sfs.riskengine.statistics.weibull;
 public class MachineryFailure extends IncidentType {
 
 	
-	public MachineryFailure(Metoc metoc, RiskTarget vessel) {
-		super(metoc, vessel);
+	public MachineryFailure(Metoc metoc, RiskTarget target) {
+		super( metoc,target);
 		
 	}
 
@@ -18,18 +19,20 @@ public class MachineryFailure extends IncidentType {
 		return 0.04;
 	}
 
-	@Override
-	public double getNumberOfIncidentPerMinut(String shiptype, double shipsize) {
-		
-		return 0.005;
-	}
+	
 
 	public double getWindcurrentFactor() {
-		if (metoc.getWindSpeed() * 0.51444 > 7.0) {
-			return Math.exp(0.2 * (metoc.getWindSpeed() * 0.51444 - 7.0));
+		if (metoc.getWindSpeed() > 7.0) {
+			return Math.exp(0.2 * (metoc.getWindSpeed() - 7.0));
 		}
 		return 1.0;
 	}
 	
+	@Override
+	public AccidentType getAccidentType() {
+	
+		return AccidentType.MACHINERYFAILURE;
+	}
+
 	
 }

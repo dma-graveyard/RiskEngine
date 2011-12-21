@@ -1,7 +1,9 @@
 package dk.sfs.riskengine.metoc;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 
@@ -13,6 +15,8 @@ import dk.frv.enav.common.xml.metoc.MetocForecastPoint;
 import dk.frv.enav.common.xml.metoc.request.MetocForecastRequest;
 import dk.frv.enav.common.xml.metoc.request.MetocForecastRequestWp;
 import dk.frv.enav.common.xml.metoc.response.MetocForecastResponse;
+import dk.frv.enav.common.xml.metoc.single.request.SinglePointMetocRequest;
+import dk.frv.enav.common.xml.metoc.single.response.SinglePointMetocResponse;
 
 public class Metoc {
 
@@ -22,36 +26,75 @@ public class Metoc {
 	private double currentDirection;
 	private double currentSpeed;
 	private double visibility;
+	private static final Map<MetocKey, Metoc> metocMap = new HashMap<MetocKey, Metoc>();
+	private static final Object mutex = new Object();
 
 	public Metoc() {
 		super();
 	}
 
-	public static Metoc getForPosition(GeoLocation pos) throws Exception {
+	public static void main(String[] args) throws Exception {
 
-		MetocForecastRequestWp reqWp = new MetocForecastRequestWp();
-		reqWp.setEta(new Date());
-		reqWp.setHeading(Heading.RL.name());
-		reqWp.setLat(pos.getLatitude());
-		reqWp.setLon(pos.getLongitude());
-		MetocForecastRequest req = new MetocForecastRequest();
-		req.getWaypoints().add(reqWp);
+		getMetocForPosition(new GeoLocation(55.870717, 12.70195));
+	}
 
-		// Make request
-		MetocForecastResponse res = (MetocForecastResponse) makeRequest("/api/xml/routeMetoc",
-				"dk.frv.enav.common.xml.metoc.request", "dk.frv.enav.common.xml.metoc.response", req);
-
-		Iterator<MetocForecastPoint> iter = res.getMetocForecast().getForecasts().iterator();
-		MetocForecastPoint point = null;
-		
-		if(iter.hasNext()){
-			point = iter.next();
-			Metoc metoc = new Metoc();
-			metoc.setCurrentDirection(point.getCurrentDirection());
-			
+	/**
+	 * Request metoc web service for current position.
+	 * 
+	 * @param pos
+	 * @return
+	 * @throws Exception
+	 */
+	public static Metoc getMetocForPosition(GeoLocation pos) {
+		/*
+		 * check in cache
+		 */
+		MetocKey key = new MetocKey(pos.getLatitude(), pos.getLongitude(), System.currentTimeMillis());
+		Metoc metoc = metocMap.get(key);
+		if (metoc != null) {
+			return metoc;
 		}
-		
-		
+		/*
+		 * Not in cache, initiate service request
+		 */
+		synchronized (mutex) {
+			metoc = metocMap.get(key);
+			if (metoc != null) {
+				// inserted in cache by another thread
+				return metoc;
+			}
+
+			SinglePointMetocResponse res;
+			try {
+				res = (SinglePointMetocResponse) makeRequest("/api/xml/singlePointMetoc",
+						"dk.frv.enav.common.xml.metoc.single.request", "dk.frv.enav.common.xml.metoc.single.response",
+						new SinglePointMetocRequest(pos));
+				MetocForecastPoint point = res.getMetocPoint();
+
+				if (point != null) {
+					metoc = new Metoc();
+					if (point.getCurrentDirection() != null) {
+						metoc.setCurrentDirection(point.getCurrentDirection().getForecast());
+					}
+					if (point.getCurrentSpeed() != null) {
+						metoc.setCurrentSpeed(point.getCurrentSpeed().getForecast());
+					}
+					metoc.setWindDirection(point.getWindDirection().getForecast());
+					metoc.setWindSpeed(point.getWindSpeed().getForecast());
+					metocMap.put(key, metoc);
+					return metoc;
+				
+				} else {
+					log.warn("Ingen metoc data for lat :" + pos.getLatitude() + " lon: " + pos.getLongitude());
+				}
+			} catch (Exception e) {
+				log.error(
+						"Problem requesting single point metoc for lat :" + pos.getLatitude() + " lon: "
+								+ pos.getLongitude(), e);
+			}
+		}
+		return null;
+
 	}
 
 	public Metoc(double windDirection, double windSpeed, double currentDirection, double currentSpeed) {
@@ -102,8 +145,8 @@ public class Metoc {
 		this.visibility = visibility;
 	}
 
-	private static ShoreServiceResponse makeRequest(String uri, String reqContextPath, String resContextPath, Object request)
-			throws Exception {
+	private static ShoreServiceResponse makeRequest(String uri, String reqContextPath, String resContextPath,
+			Object request) throws Exception {
 		// Create HTTP request
 		ShoreHttp shoreHttp = new ShoreHttp(uri);
 		// Init HTTP
@@ -112,7 +155,7 @@ public class Metoc {
 		try {
 			shoreHttp.setXmlMarshalContent(reqContextPath, request);
 		} catch (Exception e) {
-			log.error("Failed to make XML request: " + e.getMessage(),e);
+			log.error("Failed to make XML request: " + e.getMessage(), e);
 			throw new Exception("Internal error", e);
 		}
 
