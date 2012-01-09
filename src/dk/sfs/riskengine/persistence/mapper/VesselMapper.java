@@ -14,4 +14,6 @@ public interface VesselMapper {
 	 */
 	Vessel selectByMmsi(Long mmsi); 
 	Vessel selectByImo(Long imo);
+	void updateMmsiforImo(Vessel vessel);
+	void updateMmsiToNull(Long mmsi);
 }

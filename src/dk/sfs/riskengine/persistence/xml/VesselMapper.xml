@@ -72,6 +72,18 @@
 		from loyds_ships
 		where imo = #{value,jdbcType=INTEGER}
 	</select>
+	<update id="updateMmsiforImo" parameterType="dk.sfs.riskengine.persistence.domain.Vessel">
+	update loyds_ships
+		set mmsi = #{mmsi,jdbcType=INTEGER}
+		where imo = #{imo,jdbcType=INTEGER}
+  	</update>
+  	
+  	<update id="updateMmsiToNull" parameterType="Long">
+	update loyds_ships
+		set mmsi = null
+		where mmsi = #{value,jdbcType=INTEGER}
+  	</update>
+	
 	<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
 
 		delete from loyds_ships
@@ -115,10 +127,6 @@
 		#{bollardPull,jdbcType=INTEGER})
   </insert>
 	<insert id="insertSelective" parameterType="dk.sfs.riskengine.persistence.domain.Vessel">
-
-
-
-
 
 		insert into loyds_ships
 		<trim prefix="(" suffix=")" suffixOverrides=",">

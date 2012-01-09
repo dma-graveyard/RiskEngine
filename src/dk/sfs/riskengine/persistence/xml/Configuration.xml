@@ -3,6 +3,10 @@
 PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-config.dtd">
 <configuration>
+<typeHandlers>
+		<typeHandler javaType="dk.sfs.riskengine.persistence.domain.Vessel$ShipTypeIwrap" jdbcType="VARCHAR"
+			handler="dk.sfs.riskengine.persistence.typeHandler.ShipTypeTypeHandler" />
+	</typeHandlers>
 	<environments default="development">
 		<environment id="development">
 			<transactionManager type="JDBC" />
@@ -17,6 +21,9 @@ PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
 	<mappers>
 		<mapper resource="dk/sfs/riskengine/persistence/xml/VesselMapper.xml" />
 		<mapper resource="dk/sfs/riskengine/persistence/xml/DepthPointMapper.xml" />
-		<mapper resource="dk/sfs/riskengine/persistence/xml/RiskIndexesMapper.xml" />
+		<mapper resource="dk/sfs/riskengine/persistence/xml/RiskMapper.xml" />
+		<mapper
+			resource="dk/sfs/riskengine/persistence/xml/AccidentFrequenceMapper.xml" />
 	</mappers>
+	
 </configuration>

@@ -26,6 +26,7 @@ public class Metoc {
 	private double currentDirection;
 	private double currentSpeed;
 	private double visibility;
+	private double waweHeight;
 	private static final Map<MetocKey, Metoc> metocMap = new HashMap<MetocKey, Metoc>();
 	private static final Object mutex = new Object();
 
@@ -39,7 +40,7 @@ public class Metoc {
 	}
 
 	/**
-	 * Request metoc web service for current position.
+	 * Get the metoc information for the position.
 	 * 
 	 * @param pos
 	 * @return
@@ -74,16 +75,20 @@ public class Metoc {
 				if (point != null) {
 					metoc = new Metoc();
 					if (point.getCurrentDirection() != null) {
-						metoc.setCurrentDirection(point.getCurrentDirection().getForecast());
+						metoc.currentDirection = point.getCurrentDirection().getForecast();
 					}
 					if (point.getCurrentSpeed() != null) {
-						metoc.setCurrentSpeed(point.getCurrentSpeed().getForecast());
+						metoc.currentSpeed = point.getCurrentSpeed().getForecast();
 					}
-					metoc.setWindDirection(point.getWindDirection().getForecast());
-					metoc.setWindSpeed(point.getWindSpeed().getForecast());
+					if (point.getMeanWaveHeight() != null) {
+						metoc.waweHeight = point.getMeanWaveHeight().getForecast();
+					}
+					metoc.windDirection = point.getWindDirection().getForecast();
+					metoc.windSpeed = point.getWindSpeed().getForecast();
+					
 					metocMap.put(key, metoc);
 					return metoc;
-				
+
 				} else {
 					log.warn("Ingen metoc data for lat :" + pos.getLatitude() + " lon: " + pos.getLongitude());
 				}
@@ -109,40 +114,24 @@ public class Metoc {
 		return windDirection;
 	}
 
-	public void setWindDirection(double windDirection) {
-		this.windDirection = windDirection;
-	}
-
 	public double getWindSpeed() {
 		return windSpeed;
-	}
-
-	public void setWindSpeed(double windSpeed) {
-		this.windSpeed = windSpeed;
 	}
 
 	public double getCurrentDirection() {
 		return currentDirection;
 	}
 
-	public void setCurrentDirection(double currentDirection) {
-		this.currentDirection = currentDirection;
-	}
-
 	public double getCurrentSpeed() {
 		return currentSpeed;
-	}
-
-	public void setCurrentSpeed(double currentSpeed) {
-		this.currentSpeed = currentSpeed;
 	}
 
 	public double getVisibility() {
 		return visibility;
 	}
 
-	public void setVisibility(double visibility) {
-		this.visibility = visibility;
+	public double getWaweHeight() {
+		return waweHeight;
 	}
 
 	private static ShoreServiceResponse makeRequest(String uri, String reqContextPath, String resContextPath,

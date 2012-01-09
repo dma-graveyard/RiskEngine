@@ -29,10 +29,10 @@ public class SphereProjection {
 	   radius=r; //Radius of the sphere.
 	}
 	
-	public void setCentralPoint(double x0, double y0)
+	public void setCentralPoint(double lon0, double lat0)
 	{
-	    lon0=x0;
-	    lat0=y0;
+	    this.lon0=lon0;
+	    this.lat0=lat0;
 	}
 	
 	public void setRadius(double r)

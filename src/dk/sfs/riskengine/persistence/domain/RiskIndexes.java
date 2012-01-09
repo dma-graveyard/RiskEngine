@@ -5,6 +5,10 @@ import java.util.List;
 
 import org.apache.ibatis.session.SqlSession;
 
+import dk.sfs.riskengine.consequence.Consequence;
+import dk.sfs.riskengine.consequence.Ship.ShipType;
+import dk.sfs.riskengine.index.IncidentType.AccidentType;
+import dk.sfs.riskengine.persistence.domain.Vessel.ShipTypeIwrap;
 import dk.sfs.riskengine.persistence.mapper.DBSessionFactory;
 import dk.sfs.riskengine.persistence.mapper.RiskIndexesMapper;
 import dk.sfs.riskengine.persistence.mapper.VesselMapper;
@@ -14,12 +18,16 @@ public class RiskIndexes {
 
 	private Integer mmsi;
 	private Double collision;
-	private Double fireExplosion;
-	private Double foundering;
-	private Double hullFailure;
-	private Double machineryFailure;
-	private Double strandedByMachineFailure;
-	private Double strandedByNavigationError;
+	
+	
+	private Double fireExplRisk;
+	private Double founderingRisk;
+	private Double hullFailureRisk;
+	private Double machineryFailureRisk;
+	private Double driftGroundingRisk;
+	private Double poweredGroundingRisk;
+	
+	
 	private Date dateTimeCreated;
 
 	private Vessel staticInfo = new Vessel();
@@ -73,52 +81,52 @@ public class RiskIndexes {
 		this.collision = collision;
 	}
 
-	public Double getFireExplosion() {
-		return fireExplosion;
+	public Double getFireExplRisk() {
+		return fireExplRisk;
 	}
 
-	public void setFireExplosion(Double fireExplosion) {
-		this.fireExplosion = fireExplosion;
+	public void setFireExplRisk(Double fireExplosion) {
+		this.fireExplRisk = fireExplosion;
 	}
 
-	public Double getFoundering() {
-		return foundering;
+	public Double getFounderingRisk() {
+		return founderingRisk;
 	}
 
-	public void setFoundering(Double foundering) {
-		this.foundering = foundering;
+	public void setFounderingRisk(Double foundering) {
+		this.founderingRisk = foundering;
 	}
 
-	public Double getHullFailure() {
-		return hullFailure;
+	public Double getHullFailureRisk() {
+		return hullFailureRisk;
 	}
 
-	public void setHullFailure(Double hullFailure) {
-		this.hullFailure = hullFailure;
+	public void setHullFailureRisk(Double hullFailure) {
+		this.hullFailureRisk = hullFailure;
 	}
 
-	public Double getMachineryFailure() {
-		return machineryFailure;
+	public Double getMachineryFailureRisk() {
+		return machineryFailureRisk;
 	}
 
-	public void setMachineryFailure(Double machineryFailure) {
-		this.machineryFailure = machineryFailure;
+	public void setMachineryFailureRisk(Double machineryFailure) {
+		this.machineryFailureRisk = machineryFailure;
 	}
 
-	public Double getStrandedByMachineFailure() {
-		return strandedByMachineFailure;
+	public Double getDriftGroundingRisk() {
+		return driftGroundingRisk;
 	}
 
-	public void setStrandedByMachineFailure(Double strandedByMachineFailure) {
-		this.strandedByMachineFailure = strandedByMachineFailure;
+	public void setDriftGroundingRisk(Double strandedByMachineFailure) {
+		this.driftGroundingRisk = strandedByMachineFailure;
 	}
 
-	public Double getStrandedByNavigationError() {
-		return strandedByNavigationError;
+	public Double getPoweredGroundingRisk() {
+		return poweredGroundingRisk;
 	}
 
-	public void setStrandedByNavigationError(Double strandedByNavigationError) {
-		this.strandedByNavigationError = strandedByNavigationError;
+	public void setPoweredGroundingRisk(Double strandedByNavigationError) {
+		this.poweredGroundingRisk = strandedByNavigationError;
 	}
 
 	
@@ -141,11 +149,11 @@ public class RiskIndexes {
 		}
 	}
 
-	public String getShipType() {
+	public ShipTypeIwrap getShipType() {
 		return staticInfo.getShipTypeIwrap();
 	}
 
-	public void setShipType(String shipType) {
+	public void setShipType(ShipTypeIwrap shipType) {
 		staticInfo.setShipTypeIwrap(shipType);
 	}
 
@@ -183,6 +191,14 @@ public class RiskIndexes {
 
 	public void setStaticInfo(Vessel staticInfo) {
 		this.staticInfo = staticInfo;
+	}
+
+	public String getNameOfShip() {
+		return staticInfo.getNameOfShip();
+	}
+
+	public void setNameOfShip(String nameOfShip) {
+		staticInfo.setNameOfShip(nameOfShip);
 	}
 
 	
@@ -242,14 +258,7 @@ public class RiskIndexes {
 		this.lon = lon;
 	}
 
-	public String getNameOfShip() {
-		return staticInfo.getNameOfShip();
-	}
-
-	public void setNameOfShip(String nameOfShip) {
-		staticInfo.setNameOfShip(nameOfShip);
-	}
-
+	
 	public Double getCpaSog() {
 		return cpaSog;
 	}

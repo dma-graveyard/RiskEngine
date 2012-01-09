@@ -46,7 +46,7 @@ public class RiskMessageHandler implements IAisHandler {
 			 * Check for some static info to refresh
 			 */
 			RiskTarget target = map.get(aisMessage.getUserId());
-			if (target != null && !target.hasStaticInfo()) {
+			if (target != null) {
 				AisMessage5 staticMsg = (AisMessage5) aisMessage;
 				target.setStaticInfo(staticMsg);
 			}

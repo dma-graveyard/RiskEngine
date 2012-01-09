@@ -61,7 +61,7 @@ public class DepthPoint {
 			map.put("n", p.getN());
 			map.put("ratioM", ratioM);
 			map.put("ratioN", ratioN);
-			map.put("depth", draught);
+			map.put("depth", -draught);
 
 			DepthPoint ground = mapper.findGroundingPointIndices(map);
 			return mapper.selectByIndices(ground);

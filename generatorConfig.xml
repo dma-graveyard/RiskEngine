@@ -50,7 +50,7 @@
     enableDeleteByExample="false" enableCountByExample="false" enableSelectByExample="false" enableUpdateByExample="false" enableSelectByPrimaryKey="true">
       <property name="useActualColumnNames" value="false"/>
       </table>
-       -->
+      
     <table schema="mysql" tableName="accident_frequence" domainObjectName="AccidentFrequence" 
     enableDeleteByExample="false" enableCountByExample="false" enableSelectByExample="false" enableUpdateByExample="false" enableSelectByPrimaryKey="true">
       <property name="useActualColumnNames" value="false"/>
@@ -60,6 +60,16 @@
       <property name="useActualColumnNames" value="false"/>
     </table>
     <table schema="mysql" tableName="ship_type_iwrap" domainObjectName="ShipTypeIwrap" 
+    enableDeleteByExample="false" enableCountByExample="false" enableSelectByExample="false" enableUpdateByExample="false" enableSelectByPrimaryKey="true">
+      <property name="useActualColumnNames" value="false"/>
+    </table>
+     
+     <table schema="mysql" tableName="risks" domainObjectName="Risk" 
+    enableDeleteByExample="false" enableCountByExample="false" enableSelectByExample="false" enableUpdateByExample="false" enableSelectByPrimaryKey="true">
+      <property name="useActualColumnNames" value="false"/>
+    </table>
+    -->
+    <table schema="mysql" tableName="static_info_memory" domainObjectName="Static" 
     enableDeleteByExample="false" enableCountByExample="false" enableSelectByExample="false" enableUpdateByExample="false" enableSelectByPrimaryKey="true">
       <property name="useActualColumnNames" value="false"/>
     </table>

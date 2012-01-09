@@ -1,5 +1,6 @@
 package dk.sfs.riskengine.geometry;
 
+
 public class Point2d {
 
 	public double x;

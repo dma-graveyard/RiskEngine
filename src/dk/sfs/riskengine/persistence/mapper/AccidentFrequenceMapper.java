@@ -6,6 +6,6 @@ public interface AccidentFrequenceMapper {
 
 	
 	Double selectByShipTypeAndAccidentType(Map<String, Object> map);
-	Double selectByAvgByAccidentType(String accidentTypeName);
+	Double selectAvgByAccidentType(String accidentTypeName);
 
 }

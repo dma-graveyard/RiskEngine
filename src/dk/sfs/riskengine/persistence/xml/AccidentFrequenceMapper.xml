@@ -1,41 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="dk.sfs.riskengine.persistence.mapper.AccidentFrequenceMapper">
-	<resultMap id="BaseResultMap"
-		type="dk.sfs.riskengine.persistence.domain.AccidentFrequence">
-
-		<id column="id" jdbcType="INTEGER" property="id" />
-		<result column="freq_small_ship" jdbcType="DOUBLE" property="freqSmallShip" />
-		<result column="freq_medium_ship" jdbcType="DOUBLE" property="freqMediumShip" />
-		<result column="freq_large_ship" jdbcType="DOUBLE" property="freqLargeShip" />
-	</resultMap>
-	<sql id="Base_Column_List">
-		id, freq_small_ship, freq_medium_ship, freq_large_ship,
-	</sql>
+	
 	<select id="selectByShipTypeAndAccidentType" parameterType="map"
-		resultMap="Double">
+		resultType="Double">
 		select
 		<choose>
-			<when test="shipSize==SMALL">
+			<when  test="shipSize=='SMALL'" >
 				freq_small_ship
     		</when>
-			<when test="shipSize==MEDIUM">
+			<when test="shipSize=='MEDIUM'">
 				freq_medium_ship
     		</when>
-			<when test="shipSize==LARGE">
+			<when test="shipSize=='LARGE'">
 				freq_large_ship
     		</when>
 		</choose>
-		from accident_frequence f, accident_type at, ship_type_iwrap st, where
-		ship_type_id = st.id
-		and st.ship_type_name =
-		#{shipTypeName,jdbcType=VARCHAR}
+		from accident_frequence f, accident_type at, ship_type_iwrap st
+		where
+		f.ship_type_id = st.id
+		and st.ship_type_name =#{shipTypeName,jdbcType=VARCHAR}
 		and accident_type_id = at.id
-		and
-		accident_type_name = #{accidentTypeName,jdbcType=VARCHAR}
+		and accident_type_name = #{accidentTypeName,jdbcType=VARCHAR}
 	</select>
-	<select id="selectByAvgByAccidentType" parameterType="java.lang.String"
-		resultMap="Double">
+	<select id="selectAvgByAccidentType" parameterType="java.lang.String"
+		resultType="Double">
 		select
 		avg(
 		(freq_small_ship+freq_medium_ship+freq_large_ship)/3.0)

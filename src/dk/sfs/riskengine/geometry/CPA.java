@@ -88,20 +88,20 @@ public class CPA {
 		Point2d v2 = new Point2d();
 		for (RiskIndexes risk_: risk) {
 
-			p1.lon = risk_.getLon();
-			p1.lat = risk_.getLat();
-			p1.calcxy();
-			double cog1 = risk_.getCog();
-			double sog1 = risk_.getSog();
+//			p1.lon = risk_.getLon();
+//			p1.lat = risk_.getLat();
+//			p1.calcxy();
+//			double cog1 = risk_.getCog();
+//			double sog1 = risk_.getSog();
+//
+//			p2.lon = risk_.getCpaLon();
+//			p2.lat = risk_.getCpaLat();
+//			p2.calcxy();
+//			double cog2 = risk_.getCpaCog();
+//			double sog2 = risk_.getCpaSog();
 
-			p2.lon = risk_.getCpaLon();
-			p2.lat = risk_.getCpaLat();
-			p2.calcxy();
-			double cog2 = risk_.getCpaCog();
-			double sog2 = risk_.getCpaSog();
-
-			v1 = Point2d.getUnitVector(Geofunctions.compass2cartesian(cog1)).Multiply(CPA.KnotsToMs(sog1));
-			v2 = Point2d.getUnitVector(Geofunctions.compass2cartesian(cog2)).Multiply(CPA.KnotsToMs(sog2));
+//			v1 = Point2d.getUnitVector(Geofunctions.compass2cartesian(cog1)).Multiply(CPA.KnotsToMs(sog1));
+//			v2 = Point2d.getUnitVector(Geofunctions.compass2cartesian(cog2)).Multiply(CPA.KnotsToMs(sog2));
 
 //			v1 = getSpeedVector(cog1, sog1);
 //			v2 = getSpeedVector(cog2, sog2);

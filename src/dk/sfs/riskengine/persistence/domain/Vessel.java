@@ -2,33 +2,128 @@ package dk.sfs.riskengine.persistence.domain;
 
 import org.apache.ibatis.session.SqlSession;
 
+import dk.frv.ais.message.ShipTypeCargo;
 import dk.frv.ais.message.ShipTypeCargo.ShipType;
 import dk.sfs.riskengine.persistence.mapper.DBSessionFactory;
 import dk.sfs.riskengine.persistence.mapper.VesselMapper;
 
 public class Vessel {
-	private enum SHIP_TYPE_IWRAP{
-		PLEASURE_BOAT,
-		OIL_PRODUCTS_TANKER,
-		OTHER_SHIP,
-		SUPPORT_SHIP,
-		PASSENGER_SHIP,
-		GENERAL_CARGO_SHIP,
-		FISHING_SHIP,
-		CONTAINER_SHIP,
-		GAS_TANKER,
-		BULK_CARRIER,
-		CRUDE_OIL_TANKER,
-		CHEMICAL_TANKER,
-		RO_RO_CARGO_SHIP
+	public enum ShipTypeIwrap {
+		PLEASURE_BOAT("Pleasure boat"), OIL_PRODUCTS_TANKER("Oil products tanker"), OTHER_SHIP("Other ship"), SUPPORT_SHIP(
+				"Support ship"), PASSENGER_SHIP("Passenger ship"), GENERAL_CARGO_SHIP("General cargo ship"), FISHING_SHIP(
+				"Fishing ship"), CONTAINER_SHIP("Container ship"), GAS_TANKER("Gas tanker"), BULK_CARRIER(
+				"Bulk carrier"), CRUDE_OIL_TANKER("Crude oil tanker"), CHEMICAL_TANKER("Chemical tanker"), RO_RO_CARGO_SHIP(
+				"Ro-Ro cargo ship"), FAST_FERRY("Fast ferry");
+
+		private String iwrapName;
+
+		private ShipTypeIwrap(String iwrapName) {
+			this.iwrapName = iwrapName;
+		}
+
+		public static ShipTypeIwrap getShipTypeFromIwrapName(String iwrapName) {
+			for (ShipTypeIwrap type : ShipTypeIwrap.values()) {
+				if (type.iwrapName.equals(iwrapName)) {
+					return type;
+				}
+			}
+			return null;
+		}
+
+		public static ShipTypeIwrap getShipTypeFromAisType(ShipType aisType, int length) {
+
+			// TODO check mapping iwrap to ais
+
+			switch (aisType) {
+			/*
+			 * SUPPORT_SHIP
+			 */
+			case PILOT:
+			case SAR:
+			case TUG:
+			case PORT_TENDER:
+			case ANTI_POLLUTION:
+			case LAW_ENFORCEMENT:
+			case MEDICAL:
+			case TOWING:
+			case TOWING_LONG_WIDE:
+			case DREDGING:
+			case DIVING:
+			case MILITARY:
+				return SUPPORT_SHIP;
+
+				/*
+				 * Other
+				 */
+			case UNKNOWN:
+			case UNDEFINED:
+				return OTHER_SHIP;
+
+				/*
+				 * Fast ferry
+				 */
+			case HSC:
+			case WIG:
+				return FAST_FERRY;
+				/*
+				 * Fishing
+				 */
+			case FISHING:
+				return FISHING_SHIP;
+
+				/*
+				 * Pleasure boat
+				 */
+			case SAILING:
+			case PLEASURE:
+				return PLEASURE_BOAT;
+				/*
+				 * Passenger
+				 */
+			case PASSENGER:
+				return PASSENGER_SHIP;
+				/*
+				 * cargo
+				 */
+			case CARGO:
+				if (length > 150) {
+					return CONTAINER_SHIP;
+				} else {
+					return GENERAL_CARGO_SHIP;
+				}
+				/*
+				 * oil tanker
+				 */
+			case TANKER:
+				if (length > 250) {
+					return CRUDE_OIL_TANKER;
+				} else {
+					return OIL_PRODUCTS_TANKER;
+				}
+				/*
+				 * ro ro
+				 */
+			case SHIPS_ACCORDING_TO_RR:
+				return RO_RO_CARGO_SHIP;
+
+			default:
+				return null;
+
+			}
+		}
+
+		public String getIwrapName() {
+			return iwrapName;
+		}
+
 	}
-	
+
 	private Integer id;
-	private Integer imo;
-	private Integer mmsi;
+	private Long imo;
+	private Long mmsi;
 	private String nameOfShip;
 	private String shipTypeLr;
-	private String shipTypeIwrap;
+	private ShipTypeIwrap shipTypeIwrap;
 	private Double length;
 	private String lpp;
 	private String bmld;
@@ -63,7 +158,6 @@ public class Vessel {
 	private Integer fuelConsumptionTotal;
 	private Integer bollardPull;
 
-	
 	public static Vessel getByMmsi(Long mmsi) {
 		SqlSession sess = DBSessionFactory.getSession();
 		try {
@@ -72,11 +166,29 @@ public class Vessel {
 			sess.close();
 		}
 	}
-	
+
 	public static Vessel getByImo(Long imo) {
 		SqlSession sess = DBSessionFactory.getSession();
 		try {
 			return sess.getMapper(VesselMapper.class).selectByImo(imo);
+		} finally {
+			sess.close();
+		}
+	}
+
+	/**
+	 * Imo and mmsi dont match in loyds table. remove current mmsi and set it to
+	 * the ship identified by imo.
+	 * 
+	 */
+	public void updateMmsiforImo() {
+
+		SqlSession sess = DBSessionFactory.getSession();
+		try {
+			VesselMapper mapper = sess.getMapper(VesselMapper.class);
+			mapper.updateMmsiToNull(mmsi);
+			mapper.updateMmsiforImo(this);
+
 		} finally {
 			sess.close();
 		}
@@ -90,19 +202,19 @@ public class Vessel {
 		this.id = id;
 	}
 
-	public Integer getImo() {
+	public Long getImo() {
 		return imo;
 	}
 
-	public void setImo(Integer imo) {
+	public void setImo(Long imo) {
 		this.imo = imo;
 	}
 
-	public Integer getMmsi() {
+	public Long getMmsi() {
 		return mmsi;
 	}
 
-	public void setMmsi(Integer mmsi) {
+	public void setMmsi(Long mmsi) {
 		this.mmsi = mmsi;
 	}
 
@@ -122,15 +234,13 @@ public class Vessel {
 		this.shipTypeLr = shipTypeLr;
 	}
 
-	public String getShipTypeIwrap() {
+	public ShipTypeIwrap getShipTypeIwrap() {
 		return shipTypeIwrap;
 	}
 
-	public void setShipTypeIwrap(String shipTypeIwrap) {
+	public void setShipTypeIwrap(ShipTypeIwrap shipTypeIwrap) {
 		this.shipTypeIwrap = shipTypeIwrap;
 	}
-	
-	
 
 	public Double getLength() {
 		return length;
