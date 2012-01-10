@@ -40,4 +40,9 @@ public class StrandedByNavigationError extends IncidentType {
 		return AccidentType.POWEREDGROUNDING;
 	}
 
+	@Override
+	public double getWindcurrentFactor() {		
+		return 1.0;
+	}
+
 }

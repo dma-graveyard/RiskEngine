@@ -18,12 +18,6 @@ public class MachineryFailure extends IncidentType {
 
 	
 
-	public double getWindcurrentFactor() {
-		if (metoc.getWindSpeed() > 7.0) {
-			return Math.exp(0.2 * (metoc.getWindSpeed() - 7.0));
-		}
-		return 1.0;
-	}
 	
 	@Override
 	public AccidentType getAccidentType() {

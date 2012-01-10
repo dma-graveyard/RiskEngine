@@ -8,10 +8,9 @@ import dk.sfs.riskengine.statistics.Weibull;
 
 public class StrandedByMachineFailure extends IncidentType {
 
-	
-	public StrandedByMachineFailure(Metoc metoc,RiskTarget vessel) {
-		super( metoc,vessel);
-		
+	public StrandedByMachineFailure(Metoc metoc, RiskTarget vessel) {
+		super(metoc, vessel);
+
 	}
 
 	@Override
@@ -19,27 +18,29 @@ public class StrandedByMachineFailure extends IncidentType {
 		return 0.04;
 	}
 
-	
-
 	@Override
+	public double getWindcurrentFactor() {
+		return 1.0;
+	}
+
 	public double getExposure() {
-		Point2d drift= estimateCombinedWindCurrentDrift();
-		double t=getTimeToGrounding( drift.x, drift.y);
-	
-		if (t>0) {
-			//TODO Estimate the probability that the ship can drop its anchor
-			double repairTime=Weibull.random(1.1, 5.35)*3600.0;	//Seconds
-			if (t<repairTime)
-				return 0.0;
+		Point2d drift = estimateCombinedWindCurrentDrift();
+		double t = getTimeToGrounding(drift.x, drift.y);
+
+		if (t >= 0) {
+			// TODO Estimate the probability that the ship can drop its anchor
+			double repairTime = Weibull.random(1.1, 5.35) * 3600.0; // Seconds
+			if (t < repairTime)
+				return 1.0;
 			else
-				return Math.exp(-Math.abs(t/60.0)*0.05);
+				return Math.exp(-Math.abs(t - repairTime) * 0.03);
 		}
-		return 0;
+		return 0.0;
 	}
 
 	@Override
 	public AccidentType getAccidentType() {
-	
+
 		return AccidentType.DRIFTGROUNDING;
 	}
 

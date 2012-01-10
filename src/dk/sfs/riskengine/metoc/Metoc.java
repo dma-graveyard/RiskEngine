@@ -1,35 +1,35 @@
 package dk.sfs.riskengine.metoc;
 
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
 
 import dk.frv.ais.geo.GeoLocation;
 import dk.frv.enav.common.xml.ShoreServiceResponse;
-import dk.frv.enav.common.xml.Waypoint.Heading;
-import dk.frv.enav.common.xml.metoc.MetocForecast;
 import dk.frv.enav.common.xml.metoc.MetocForecastPoint;
-import dk.frv.enav.common.xml.metoc.request.MetocForecastRequest;
-import dk.frv.enav.common.xml.metoc.request.MetocForecastRequestWp;
-import dk.frv.enav.common.xml.metoc.response.MetocForecastResponse;
 import dk.frv.enav.common.xml.metoc.single.request.SinglePointMetocRequest;
 import dk.frv.enav.common.xml.metoc.single.response.SinglePointMetocResponse;
 
 public class Metoc {
 
 	private static final Logger log = Logger.getLogger(Metoc.class);
-	private double windDirection;
-	private double windSpeed;
-	private double currentDirection;
-	private double currentSpeed;
-	private double visibility;
-	private double waweHeight;
+	
+	/*
+	 * Default values
+	 */
+	private Double windDirection=0.0;
+	private Double windSpeed=0.0;
+	private Double currentDirection=0.0;
+	private Double currentSpeed=0.0;
+	private Double visibility;
+	private Double waweHeight=0.0;
+	private Double airTemp=10.0; 
 	private static final Map<MetocKey, Metoc> metocMap = new HashMap<MetocKey, Metoc>();
+
 	private static final Object mutex = new Object();
 
+	
 	public Metoc() {
 		super();
 	}
@@ -83,6 +83,7 @@ public class Metoc {
 					if (point.getMeanWaveHeight() != null) {
 						metoc.waweHeight = point.getMeanWaveHeight().getForecast();
 					}
+					
 					metoc.windDirection = point.getWindDirection().getForecast();
 					metoc.windSpeed = point.getWindSpeed().getForecast();
 					
@@ -102,7 +103,7 @@ public class Metoc {
 
 	}
 
-	public Metoc(double windDirection, double windSpeed, double currentDirection, double currentSpeed) {
+	public Metoc(Double windDirection, Double windSpeed, Double currentDirection, Double currentSpeed) {
 		super();
 		this.windDirection = windDirection;
 		this.windSpeed = windSpeed;
@@ -110,27 +111,27 @@ public class Metoc {
 		this.currentSpeed = currentSpeed;
 	}
 
-	public double getWindDirection() {
+	public Double getWindDirection() {
 		return windDirection;
 	}
 
-	public double getWindSpeed() {
+	public Double getWindSpeed() {
 		return windSpeed;
 	}
 
-	public double getCurrentDirection() {
+	public Double getCurrentDirection() {
 		return currentDirection;
 	}
 
-	public double getCurrentSpeed() {
+	public Double getCurrentSpeed() {
 		return currentSpeed;
 	}
 
-	public double getVisibility() {
+	public Double getVisibility() {
 		return visibility;
 	}
 
-	public double getWaweHeight() {
+	public Double getWaweHeight() {
 		return waweHeight;
 	}
 
@@ -171,6 +172,10 @@ public class Metoc {
 		}
 
 		return res;
+	}
+
+	public Double getAirTemp() {
+		return airTemp;
 	}
 
 }

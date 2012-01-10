@@ -6,9 +6,9 @@ import dk.sfs.riskengine.persistence.domain.Vessel.ShipTypeIwrap;
 public class Consequence {
 
 	
-	public static double getConsequence(AccidentType incident, Ship ship1,  double waveHeight ) {
+	public static double getConsequence(AccidentType incident, Ship ship1,  double waveHeight , boolean softBottom, double timeFromRescue, double airTemperature) {
 		
-		return getConsequence(incident, ship1, waveHeight, null); 
+		return getConsequence(incident, ship1, waveHeight, softBottom, timeFromRescue, airTemperature, null); 
 	}
 	/**
 	 * @param incident the accident type
@@ -16,16 +16,12 @@ public class Consequence {
 	 * @param ship2 striking ship in case of collision 
 	 * @return
 	 */
-	public static double getConsequence(AccidentType incident, Ship ship1,  double waveHeight , Ship ship2 ) {
+	public static double getConsequence(AccidentType incident, Ship ship1,  double waveHeight , boolean softBottom, double timeFromRescue, double airTemperature, Ship ship2 ) {
 
 		if(ship2!=null){
 			ship2.EstimateShipParameters(false);
 		}
 		
-		boolean softBottom = true; // in Denmark this is usually true.
-		double timeFromRescue = 2.0; // Hours
-		double airTemperature = -10.0; // Degree C
-
 		// Ship1 is the damaged ship. 
 
 		ship1.EstimateShipParameters(false); // If possible get them using the

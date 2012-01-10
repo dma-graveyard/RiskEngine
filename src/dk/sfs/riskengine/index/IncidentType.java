@@ -27,6 +27,12 @@ public abstract class IncidentType {
 	
 	private double riskProba;
 	protected double consequenceIndex;
+	/*
+	 * Default values
+	 */
+	private static final boolean softBottom = true; // in Denmark this is usually true.
+	private static final double timeFromRescue = 1.0; // Hours
+	
 	
 	public enum AccidentType{
 			COLLISION,
@@ -52,7 +58,7 @@ public abstract class IncidentType {
 		this.vessel = target;
 		this.metoc = metoc;
 		setRiskProba();
-		consequenceIndex = Consequence.getConsequence(getAccidentType(), vessel.getConsequenceShip(), metoc.getWaweHeight());
+		consequenceIndex = Consequence.getConsequence(getAccidentType(), vessel.getConsequenceShip(), metoc.getWaweHeight(), softBottom, timeFromRescue,metoc.getAirTemp());
 	}
 
 	
@@ -67,7 +73,7 @@ public abstract class IncidentType {
 		this.vessel = target;
 		this.metoc = metoc;
 		setRiskProba();
-		consequenceIndex = Consequence.getConsequence(getAccidentType(), vessel.getConsequenceShip(), metoc.getWaweHeight(), other.getConsequenceShip());
+		consequenceIndex = Consequence.getConsequence(getAccidentType(), vessel.getConsequenceShip(), metoc.getWaweHeight(), softBottom, timeFromRescue, metoc.getAirTemp(), other.getConsequenceShip());
 	}
 	
 	private void setRiskProba() {
@@ -106,9 +112,13 @@ public abstract class IncidentType {
 	 * 
 	 * @return
 	 */
-	protected double getWindcurrentFactor() {
+	public double getWindcurrentFactor() {
+		if (metoc.getWindSpeed() > 7.0) {
+			return Math.exp(0.1 * (metoc.getWindSpeed() - 7.0));
+		}
 		return 1.0;
 	}
+
 
 	/**
 	 *  Override for incident specific visiblity factor when visibility is availaible.

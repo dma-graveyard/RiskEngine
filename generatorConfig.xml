@@ -68,8 +68,13 @@
     enableDeleteByExample="false" enableCountByExample="false" enableSelectByExample="false" enableUpdateByExample="false" enableSelectByPrimaryKey="true">
       <property name="useActualColumnNames" value="false"/>
     </table>
-    -->
+    
     <table schema="mysql" tableName="static_info_memory" domainObjectName="Static" 
+    enableDeleteByExample="false" enableCountByExample="false" enableSelectByExample="false" enableUpdateByExample="false" enableSelectByPrimaryKey="true">
+      <property name="useActualColumnNames" value="false"/>
+    </table>
+    -->
+    <table schema="mysql" tableName="ais_vessel_static" domainObjectName="AisVesselStatic" 
     enableDeleteByExample="false" enableCountByExample="false" enableSelectByExample="false" enableUpdateByExample="false" enableSelectByPrimaryKey="true">
       <property name="useActualColumnNames" value="false"/>
     </table>

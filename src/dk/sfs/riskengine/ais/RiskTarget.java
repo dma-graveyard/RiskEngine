@@ -88,7 +88,7 @@ public class RiskTarget {
 	 */
 	public void setStaticInfo(AisMessage5 msg) {
 
-		actualDraught = new Double(msg.getDraught());
+		actualDraught = new Double(msg.getDraught())/10.0;
 		/*
 		 * get info from Loyds table with imo number
 		 */
@@ -199,7 +199,7 @@ public class RiskTarget {
 		Metoc metoc = Metoc.getMetocForPosition(pos.getGeoLocation());
 
 		/*
-		 * Fire explosion
+		 * update risk indexes and conseqence
 		 */
 		new FireExplosion(metoc, this).save();
 		new MachineryFailure(metoc, this).save();
