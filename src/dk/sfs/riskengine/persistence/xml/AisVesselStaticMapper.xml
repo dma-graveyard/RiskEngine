@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="dk.sfs.riskengine.persistence.mapper.AisVesselStaticMapper" >
+  <resultMap id="BaseResultMap" type="dk.sfs.riskengine.persistence.domain.AisVesselStatic" >
+   
+    <id column="mmsi" property="mmsi" jdbcType="INTEGER" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="ship_type" property="shipType" jdbcType="TINYINT" />
+    <result column="cargo" property="cargo" jdbcType="TINYINT" />
+    <result column="dim_bow" property="dimBow" jdbcType="SMALLINT" />
+    <result column="dim_stern" property="dimStern" jdbcType="SMALLINT" />
+    <result column="dim_port" property="dimPort" jdbcType="SMALLINT" />
+    <result column="dim_starboard" property="dimStarboard" jdbcType="SMALLINT" />
+ 
+    <result column="draught" property="draught" jdbcType="INTEGER" />
+    <result column="imo" property="imo" jdbcType="INTEGER" />
+  </resultMap>
+  
+ 
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    
+    select 
+ 	avs.mmsi, name, ship_type, cargo, dim_bow, dim_stern, dim_port, dim_starboard, draught, imo
+    from ais_vessel_static avs, ais_class_a_static acas 
+    where avs.mmsi = #{mmsi,jdbcType=INTEGER}
+    and avs.mmsi = acas.mmsi
+    
+  </select>
+
+</mapper>
