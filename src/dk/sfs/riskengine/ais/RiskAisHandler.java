@@ -3,10 +3,7 @@ package dk.sfs.riskengine.ais;
 import java.util.Date;
 
 import dk.frv.ais.handler.IAisHandler;
-import dk.frv.ais.proprietary.GatehouseFactory;
 import dk.frv.ais.reader.RoundRobinAisTcpReader;
-import dk.frv.ais.utils.filter.FilterSettings;
-import dk.frv.ais.utils.filter.MessageHandler;
 import dk.sfs.riskengine.geometry.CPA;
 
 public class RiskAisHandler {
