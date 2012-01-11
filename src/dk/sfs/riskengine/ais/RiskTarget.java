@@ -287,6 +287,9 @@ public class RiskTarget {
 		return speedVector;
 	}
 
+	
+	
+	
 	public Ship getConsequenceShip() {
 		Ship ship1 = new Ship();
 		ship1.shiptype = staticInfo.getShipTypeIwrap();
