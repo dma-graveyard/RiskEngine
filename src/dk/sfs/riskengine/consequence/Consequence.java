@@ -15,16 +15,6 @@ public class Consequence {
 	 */
 	public static double getConsequence(AccidentType incident, Ship ship1,  double waveHeight , boolean softBottom, double timeFromRescue, double airTemperature, Ship ship2 ) {
 
-		if(ship2!=null){
-			ship2.EstimateShipParameters(false);
-		}
-		
-		// Ship1 is the damaged ship. 
-
-		ship1.EstimateShipParameters(false); // If possible get them using the
-											// ships IMO and lloyds table.
-		
-
 		// Store original values because they are manipulated in the following
 		// functions
 		int persons0 = ship1.numberOfPersons;
@@ -90,7 +80,31 @@ public class Consequence {
 
 		return totalCost;
 	}
+	
+	
+	//Estimates the maximum possible consequence
+	public static double getMaxConsequence(Ship ship1) {
+		
+		double materialCost=ship1.valueOfShip+ship1.valueOfCargo;
+		double lossOfLives=ship1.numberOfPersons*LossOfLives.costOfLife;
+		
+		//Spill costs
+		double fuel1=ship1.fuelType1Fraction*ship1.bunkerTonnage;
+		double fuel2=ship1.fuelType2Fraction*ship1.bunkerTonnage;
+		double cargoOil=0.0;
+		//Only oil tankers can polute in this model.
+		if (ship1.shiptype == ShipTypeIwrap.CRUDE_OIL_TANKER || ship1.shiptype == ShipTypeIwrap.OIL_PRODUCTS_TANKER) {
+			cargoOil=ship1.cargoTonnage;
+		}
+		double spillsize = fuel1 + fuel2 + cargoOil;
+		double polutionCost = PolutionCost.totalEstimate(spillsize);
+		
+		double maxCost=materialCost + lossOfLives + polutionCost;
+		return maxCost;
+	}
 
+	
+	
 	// Todo: Include weather. Does the oil evaporate or does it drift away from
 	// shore?
 	// Include different cost for different oil types

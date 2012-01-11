@@ -21,6 +21,7 @@ import dk.sfs.riskengine.persistence.mapper.AccidentFrequenceMapper;
 import dk.sfs.riskengine.persistence.mapper.DBSessionFactory;
 import dk.sfs.riskengine.persistence.mapper.RiskMapper;
 import dk.sfs.riskengine.statistics.Normal;
+import dk.sfs.riskengine.statistics.Weibull;
 
 public abstract class IncidentType {
 
@@ -84,22 +85,34 @@ public abstract class IncidentType {
 	 * set a normalised value for the consequence index
 	 */
 	private void setConsequence() {
+		Ship ship1=vessel.getConsequenceShip();
 		Ship otherShip = null;
 		if (otherVessel != null) {
 			otherShip = otherVessel.getConsequenceShip();
+			otherShip.EstimateShipParameters(false);
 		}
-		consequenceIndex = Consequence.getConsequence(getAccidentType(), vessel.getConsequenceShip(),
+		
+		// Ship1 is the damaged ship. 
+		ship1.EstimateShipParameters(false); // If possible get them using the
+											// ships IMO and lloyds table.
+		
+		
+		consequenceIndex = Consequence.getConsequence(getAccidentType(), ship1,
 				metoc.getWaweHeight(), DEFAULT_SOFT_BOTTOM, DEFAULT_TIME_TO_RESCUE, metoc.getAirTemp(), otherShip);
 		/*
 		 * normalise
+		 * Would like to calculate a normal consequence. But because the consequence calculation contains 
+		 * many random values this is not good. Instead we calculate the maximum possible cost
 		 */
-		double normal = Consequence.getConsequence(getAccidentType(), vessel.getConsequenceShip(),
-				Metoc.DEFAULT_WAWE_HEIGHT, DEFAULT_SOFT_BOTTOM, DEFAULT_TIME_TO_RESCUE, Metoc.DEFAULT_AIR_TEMP,
-				otherShip);
-		if (normal == 0) {
+		//double normal = Consequence.getConsequence(getAccidentType(), vessel.getConsequenceShip(),
+		//		Metoc.DEFAULT_WAWE_HEIGHT, DEFAULT_SOFT_BOTTOM, DEFAULT_TIME_TO_RESCUE, Metoc.DEFAULT_AIR_TEMP,
+		//		otherShip);
+		
+		double maximum=Consequence.getMaxConsequence(ship1);
+		if (maximum == 0) {
 			consequenceIndex = 0;
 		} else {
-			consequenceIndex /= normal;
+			consequenceIndex /= maximum;
 		}
 	}
 
@@ -110,18 +123,18 @@ public abstract class IncidentType {
 
 		// requires static info
 		double c = getCasualtyRate(vessel.getShipTypeIwrap(), vessel.getLength());
-		double normal = c * (RiskTarget.CAL_PERIOD / (365.25 * 24d * 60d));
+		c*=(RiskTarget.CAL_PERIOD / (365.25 * 24d * 60d));
+		double maximum = c*getMaxAgeFactor()*getMaxFlagFactor()*getMaxWindcurrentFactor()*getMaxVisibilityFactor() * getMaxExposure();
 
 		if (vessel.getYearOfBuild() != null) {
-
 			c *= getAgeFactor(new GregorianCalendar().get(Calendar.YEAR) - vessel.getYearOfBuild());
 		}
 		if (vessel.getFlag() != null) {
 			c *= getFlagFactor(vessel.getFlag());
 		}
-
-		riskProba = c * getWindcurrentFactor() * getVisibilityFactor() * getExposure() / normal;
-
+		
+		riskProba = c * getWindcurrentFactor() * getVisibilityFactor() * getExposure();
+		riskProba/=maximum;
 	}
 
 	protected abstract double getAgeFactorParam();
@@ -129,8 +142,16 @@ public abstract class IncidentType {
 	protected double getAgeFactor(double age) {
 		return Math.exp(getAgeFactorParam() * age);
 	}
+	
+	protected double getMaxAgeFactor() {
+		return getAgeFactor(25.0);
+	}
 
 	protected double getFlagFactor(String flag) {
+		return 1.0;
+	}
+	
+	protected double getMaxFlagFactor() {
 		return 1.0;
 	}
 
@@ -146,6 +167,10 @@ public abstract class IncidentType {
 		return 1.0;
 	}
 
+	public double getMaxWindcurrentFactor() {
+		return Math.exp(0.1 * (33.0 - 7.0));
+	}
+	
 	/**
 	 * Override for incident specific visiblity factor when visibility is
 	 * availaible.
@@ -155,6 +180,10 @@ public abstract class IncidentType {
 	 * @return
 	 */
 	protected final double getVisibilityFactor() {
+		return 1.0;
+	}
+	
+	protected final double getMaxVisibilityFactor() {
 		return 1.0;
 	}
 
@@ -168,10 +197,15 @@ public abstract class IncidentType {
 		return 1.0;
 	}
 
+	
 	protected double getExposure() {
 		return 1.0;
 	}
-
+	
+	protected double getMaxExposure() {
+		return 1.0;
+	}
+	
 	protected Double getCasualtyRate(ShipTypeIwrap shipTypeIwrap, double shipsize) {
 
 		SqlSession sess = DBSessionFactory.getSession();

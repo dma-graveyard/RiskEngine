@@ -64,7 +64,7 @@ public class Collision {
 		double Ekin2=0.5*ship2.calcDisplacement(true)*1000.0*Math.pow(ship2.speed*0.51,2)*0.000001; //Kinetic energy in MJ
 		if (Ekin2<=0.1) {return;}
 		
-		double Edamage=Ekin2*0.4;	//Assume 40% of the energy is absorbed in the struck ship
+		double Edamage=Ekin2*0.4;	//Assume 40% of the energy is absorbed in the struck ship. 60% then goes to moving the ship and also into the striking ship
 		double lambda=0.0007;
 		penetration=1.0-Math.exp(-lambda*Edamage);
 		penetration*=Uniform.random(0.2,1.0);	//The collision happens at an angle.

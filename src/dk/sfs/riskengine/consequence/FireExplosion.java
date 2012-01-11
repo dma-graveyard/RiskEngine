@@ -62,7 +62,7 @@ public class FireExplosion {
 		cargoDamage=hullDamage;
 		if (hullDamage>0.6) {
 			sinks=true;
-			timeToSink=Uniform.random(1.0, 5.0);
+			timeToSink=Uniform.random(1.0, 5.0);	//Uniformly between 1 and 5 hours
 		}
 	}
 	
