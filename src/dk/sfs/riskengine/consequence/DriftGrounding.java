@@ -51,8 +51,9 @@ public class DriftGrounding {
 		if (ship1.numberOfPersons<0) ship1.numberOfPersons=0;
 		if (ship1.bunkerTonnage<0.0) ship1.bunkerTonnage=0.0;
 		if(ship1.cargoTonnage<0.0) ship1.cargoTonnage=0.0;
+		
+		materialCost+=500.0*ship1.loa*(1e-6);	//mill. $. A grounding always cost something eventhough no damage occurs. Inspection+waiting;
 	}
-	
 	
 	
 	private void estimateSpill(Ship ship1, double waveHeight, boolean softBottom) {

@@ -29,8 +29,13 @@ public abstract class IncidentType {
 	protected RiskTarget vessel;
 	protected RiskTarget otherVessel;
 
-	private double riskProba;
-	protected double consequenceIndex;
+	private double riskProba;			//The normalised consequence [0-1]	1=the maximum possible consequence
+	protected double consequenceIndex;	//The normalised probability of the incident [0-1]	1=highest probability
+	
+	private double consequence;	//The absolute consequence in mill. $
+	private double probability;	//The absolute probability of the incident
+	private double riskIndex;	//The absolute risk index in mill. $
+	private double riskIndexNorm;	//The normalised risk index [0-1]
 	/*
 	 * Default values
 	 */
@@ -78,7 +83,9 @@ public abstract class IncidentType {
 		this.otherVessel = other;
 		setRiskProba();
 		setConsequence();
-
+		
+		riskIndex=probability*consequence;
+		riskIndexNorm=riskProba*consequenceIndex;
 	}
 
 	/**
@@ -95,14 +102,16 @@ public abstract class IncidentType {
 		// Ship1 is the damaged ship. 
 		ship1.EstimateShipParameters(false); // If possible get them using the
 											// ships IMO and lloyds table.
-		
-		
-		consequenceIndex = Consequence.getConsequence(getAccidentType(), ship1,
+			
+		consequence = Consequence.getConsequence(getAccidentType(), ship1,
 				metoc.getWaweHeight(), DEFAULT_SOFT_BOTTOM, DEFAULT_TIME_TO_RESCUE, metoc.getAirTemp(), otherShip);
+		
+		if (consequence<0.0) consequence=0.0;
+		
 		/*
-		 * normalise
+		 * Normalise
 		 * Would like to calculate a normal consequence. But because the consequence calculation contains 
-		 * many random values this is not good. Instead we calculate the maximum possible cost
+		 * many random values this is not good. Instead we calculate the maximum possible cost.
 		 */
 		//double normal = Consequence.getConsequence(getAccidentType(), vessel.getConsequenceShip(),
 		//		Metoc.DEFAULT_WAWE_HEIGHT, DEFAULT_SOFT_BOTTOM, DEFAULT_TIME_TO_RESCUE, Metoc.DEFAULT_AIR_TEMP,
@@ -112,7 +121,7 @@ public abstract class IncidentType {
 		if (maximum == 0) {
 			consequenceIndex = 0;
 		} else {
-			consequenceIndex /= maximum;
+			consequenceIndex = consequence/maximum;
 		}
 	}
 
@@ -120,7 +129,6 @@ public abstract class IncidentType {
 	 * set a normalised value for the risk problabilty
 	 */
 	private void setRiskProba() {
-
 		// requires static info
 		double c = getCasualtyRate(vessel.getShipTypeIwrap(), vessel.getLength());
 		c*=(RiskTarget.CAL_PERIOD / (365.25 * 24d * 60d));
@@ -133,8 +141,11 @@ public abstract class IncidentType {
 			c *= getFlagFactor(vessel.getFlag());
 		}
 		
-		riskProba = c * getWindcurrentFactor() * getVisibilityFactor() * getExposure();
-		riskProba/=maximum;
+		probability = c * getWindcurrentFactor() * getVisibilityFactor() * getExposure();
+		if (maximum == 0)
+			riskProba=0.0;
+		else
+			riskProba=probability/maximum;
 	}
 
 	protected abstract double getAgeFactorParam();

@@ -17,14 +17,14 @@ public class Collision {
 	public double cargoDamage;		//Percentage of cargo damaged	0.0=none, 1.0=all
 	public double polutionCost;		//Million US dollar
 	public double materialCost;		//Million US dollar
-	public double livesLost;		//Number of people dead
+	public double livesLost;		//Number of people dead people
 	
 	//Constructor
 	public Collision() {
 		penetration=0.0;
 		damageWidth=0.0;
 		xlocation=0.0;
-		timeToSink=9999.9;
+		timeToSink=9999.9;	//Important to use this value when nothing else has been assigned
 		sinks=false;
 		hullDamage=0.0;
 		cargoDamage=0.0;
@@ -59,6 +59,7 @@ public class Collision {
 	private void estimateDamage(Ship ship1, Ship ship2) {
 		penetration=0.0;
 		damageWidth=0.0;
+		hullDamage=0.0;
 		if (ship1.calcDisplacement(true)<=0.0) return;
 		
 		double Ekin2=0.5*ship2.calcDisplacement(true)*1000.0*Math.pow(ship2.speed*0.51,2)*0.000001; //Kinetic energy in MJ
@@ -66,17 +67,16 @@ public class Collision {
 		
 		double Edamage=Ekin2*0.4;	//Assume 40% of the energy is absorbed in the struck ship. 60% then goes to moving the ship and also into the striking ship
 		double lambda=0.0007;
-		penetration=1.0-Math.exp(-lambda*Edamage);
-		penetration*=Uniform.random(0.2,1.0);	//The collision happens at an angle.
-		if (penetration<0.005) penetration=0.0;
+		penetration=1.0-Math.exp(-lambda*Edamage);	//Penetration as a fraction of the ship width
+		penetration*=Uniform.random(0.2,1.0);	//The collision happens at an angle. This reduces the penetration
+		if (penetration<0.005) penetration=0.0;	//If the penetration is very small then ignore it
 		
 		damageWidth=ship2.breadth*0.67/ship1.loa;		//ToDo: Depends also on the penetration
 
 		double damageHeight=1.0;                  //Height of the damaged ship.
 		if (ship1.depth!=0.0) damageHeight=ship2.depth/ship1.depth;
 		if (damageHeight >1.0) damageHeight =1.0;  
-		hullDamage=penetration*damageWidth* damageHeight;                            //huldamage is normalized with the size of the ship
-
+		hullDamage=penetration*damageWidth* damageHeight;  //huldamage is normalized with the size of the ship
 		
 		xlocation=Uniform.random(0.0, 1.0);	//Assume uniform probability for the location of the hit
 	}
@@ -141,7 +141,7 @@ public class Collision {
 				cargoDamage=vol;
 			}
 		}
-		//ToDo: Cargo damage to the other ships
+		//ToDo: Damage to the other ships
 		
 		return;
 	}
