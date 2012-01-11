@@ -26,7 +26,7 @@ public class Ship {
 
 	public double designSpeed; // knots
 	public double speed; // knots
-
+	public double depth;                //The depth of the ship in meters
 	public double age; // years
 	public double valueOfShip; // million US dollar
 	public double valueOfCargo; // million US dollar
@@ -71,6 +71,8 @@ public class Ship {
 			estimateFueltypes();
 			estimateCargoType();
 			estimateNumberOfPersons();
+			estimateDepth();
+			
 		} else // Overwrite only if value is missing
 		{
 			if (breadth == 0.0)
@@ -99,6 +101,7 @@ public class Ship {
 				estimateCargoType();
 			if (numberOfPersons == 0)
 				estimateNumberOfPersons();
+			if (depth==0.0) estimateDepth();
 		}
 
 		return;
@@ -464,7 +467,7 @@ public class Ship {
 		if (shiptype == ShipTypeIwrap.OTHER_SHIP)
 			c = 0.1;
 
-		value = estimateShipValue(includeStocastic);
+		value = estimateNewBuildingPrice(includeStocastic);
 		value *= loaded;
 		valueOfCargo = value * c;
 		return value;
@@ -744,4 +747,35 @@ public class Ship {
 		lightweight = steelWeight + machineryWeight + outfitWeight;
 		return lightweight;
 	}
+	
+	double estimateNewBuildingPrice(boolean includeStocastic) {
+        double age0=age;
+        age=0.0;
+        double newBuildingPrice=estimateShipValue(includeStocastic);
+        age=age0;
+        return newBuildingPrice;
+}
+
+	public double estimateDepth() {
+        double a=0.09,b=0.8;
+        if (shiptype==ShipTypeIwrap.CRUDE_OIL_TANKER) {a=0.0935;b=-1.491;}
+        if (shiptype==ShipTypeIwrap.OIL_PRODUCTS_TANKER) {a=0.0958;b=-1.3162;}
+        if (shiptype==ShipTypeIwrap.CHEMICAL_TANKER) {a=0.0775;b=-0.4337;}
+        if (shiptype==ShipTypeIwrap.GAS_TANKER) {a=0.0949;b=-1.0147;}
+        if (shiptype==ShipTypeIwrap.CONTAINER_SHIP) {a=0.0741;b=1.0261;}
+        if (shiptype==ShipTypeIwrap.GENERAL_CARGO_SHIP) {a=0.0763;b=0.4633;}
+        if (shiptype==ShipTypeIwrap.BULK_CARRIER) {a=0.085;b=-0.0111;}
+        if (shiptype==ShipTypeIwrap.RO_RO_CARGO_SHIP) {a=0.1358;b=0.-4.2569;}
+        if (shiptype==ShipTypeIwrap.PASSENGER_SHIP) {a=0.0628;b=0.9345;}
+        if (shiptype==ShipTypeIwrap.FAST_FERRY) {a=0.0745;b=0.4937;} 
+        if (shiptype==ShipTypeIwrap.SUPPORT_SHIP) {a=0.0645;b=1.8854;}
+        if (shiptype==ShipTypeIwrap.FISHING_SHIP) {a=0.0712;b=1.5763;}
+        if (shiptype==ShipTypeIwrap.PLEASURE_BOAT) {a=0.0569;b=1.913;}
+        if (shiptype==ShipTypeIwrap.OTHER_SHIP) {a=0.0955;b=0.8276;}
+        
+        depth=a*loa+b;
+        if (depth<2.0) depth=2.0;
+        return depth;
+}
+
 }

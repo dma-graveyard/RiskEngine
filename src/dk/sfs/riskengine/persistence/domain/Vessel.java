@@ -30,7 +30,7 @@ public class Vessel {
 			return null;
 		}
 
-		public static ShipTypeIwrap getShipTypeFromAisType(ShipType aisType, int length) {
+		public static ShipTypeIwrap getShipTypeFromAisType(ShipType aisType, double length) {
 
 			// TODO check mapping iwrap to ais
 

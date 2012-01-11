@@ -24,6 +24,8 @@ PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
 		<mapper resource="dk/sfs/riskengine/persistence/xml/RiskMapper.xml" />
 		<mapper
 			resource="dk/sfs/riskengine/persistence/xml/AccidentFrequenceMapper.xml" />
+			<mapper
+			resource="dk/sfs/riskengine/persistence/xml/AisVesselStaticMapper.xml" />
 	</mappers>
 	
 </configuration>

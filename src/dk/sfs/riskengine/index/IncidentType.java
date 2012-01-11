@@ -10,6 +10,7 @@ import org.apache.ibatis.session.SqlSession;
 
 import dk.sfs.riskengine.ais.RiskTarget;
 import dk.sfs.riskengine.consequence.Consequence;
+import dk.sfs.riskengine.consequence.Ship;
 import dk.sfs.riskengine.geometry.CPA;
 import dk.sfs.riskengine.geometry.Geofunctions;
 import dk.sfs.riskengine.geometry.Point2d;
@@ -19,37 +20,36 @@ import dk.sfs.riskengine.persistence.domain.Vessel.ShipTypeIwrap;
 import dk.sfs.riskengine.persistence.mapper.AccidentFrequenceMapper;
 import dk.sfs.riskengine.persistence.mapper.DBSessionFactory;
 import dk.sfs.riskengine.persistence.mapper.RiskMapper;
+import dk.sfs.riskengine.statistics.Normal;
 
 public abstract class IncidentType {
 
 	protected Metoc metoc;
 	protected RiskTarget vessel;
-	
+	protected RiskTarget otherVessel;
+
 	private double riskProba;
 	protected double consequenceIndex;
 	/*
 	 * Default values
 	 */
-	private static final boolean softBottom = true; // in Denmark this is usually true.
-	private static final double timeFromRescue = 1.0; // Hours
-	
-	
-	public enum AccidentType{
-			COLLISION,
-			FOUNDERING,
-			HULLFAILURE,        
-			MACHINERYFAILURE,   
-			FIRE_EXPLOSION,     
-			POWEREDGROUNDING,   
-			DRIFTGROUNDING
-			}
-	
-	public enum ShipSize{
+	private static final boolean DEFAULT_SOFT_BOTTOM = true; // in Denmark this
+																// is
+	// usually true.
+	private static final double DEFAULT_TIME_TO_RESCUE = 1.0; // Hours
+
+	public enum AccidentType {
+		COLLISION, FOUNDERING, HULLFAILURE, MACHINERYFAILURE, FIRE_EXPLOSION, POWEREDGROUNDING, DRIFTGROUNDING
+	}
+
+	public enum ShipSize {
 		SMALL, MEDIUM, LARGE;
 	}
-	
+
 	/**
-	 * Instantiate and calculate risk index and consequence index for incident invloving own ship only 
+	 * Instantiate and calculate risk index and consequence index for incident
+	 * invloving own ship only
+	 * 
 	 * @param metoc
 	 * @param target
 	 */
@@ -58,12 +58,14 @@ public abstract class IncidentType {
 		this.vessel = target;
 		this.metoc = metoc;
 		setRiskProba();
-		consequenceIndex = Consequence.getConsequence(getAccidentType(), vessel.getConsequenceShip(), metoc.getWaweHeight(), softBottom, timeFromRescue,metoc.getAirTemp());
+		setConsequence();
+
 	}
 
-	
 	/**
-	 * Instantiate and calculate risk index and consequence index for incident invloving own ship and another ship, i.e collision
+	 * Instantiate and calculate risk index and consequence index for incident
+	 * invloving own ship and another ship, i.e collision
+	 * 
 	 * @param metoc
 	 * @param target
 	 * @param other
@@ -72,28 +74,53 @@ public abstract class IncidentType {
 		super();
 		this.vessel = target;
 		this.metoc = metoc;
+		this.otherVessel = other;
 		setRiskProba();
-		consequenceIndex = Consequence.getConsequence(getAccidentType(), vessel.getConsequenceShip(), metoc.getWaweHeight(), softBottom, timeFromRescue, metoc.getAirTemp(), other.getConsequenceShip());
-	}
-	
-	private void setRiskProba() {
-		double c = 1.0;
-		if (vessel.hasStaticInfo()) {
-			// requires static info
-			c *= getCasualtyRate(vessel.getShipTypeIwrap(), vessel.getLength());
-			
-			if (vessel.getYearOfBuild() != null) {
+		setConsequence();
 
-				c *= getAgeFactor(new GregorianCalendar().get(Calendar.YEAR) - vessel.getYearOfBuild());
-			}
-			if (vessel.getFlag() != null) {
-				c *= getFlagFactor(vessel.getFlag());
-			}
-			
+	}
+
+	/**
+	 * set a normalised value for the consequence index
+	 */
+	private void setConsequence() {
+		Ship otherShip = null;
+		if (otherVessel != null) {
+			otherShip = otherVessel.getConsequenceShip();
 		}
-		riskProba =  c*getWindcurrentFactor() * getVisibilityFactor() * getExposure();
-		
-		
+		consequenceIndex = Consequence.getConsequence(getAccidentType(), vessel.getConsequenceShip(),
+				metoc.getWaweHeight(), DEFAULT_SOFT_BOTTOM, DEFAULT_TIME_TO_RESCUE, metoc.getAirTemp(), otherShip);
+		/*
+		 * normalise
+		 */
+		double normal = Consequence.getConsequence(getAccidentType(), vessel.getConsequenceShip(),
+				Metoc.DEFAULT_WAWE_HEIGHT, DEFAULT_SOFT_BOTTOM, DEFAULT_TIME_TO_RESCUE, Metoc.DEFAULT_AIR_TEMP,
+				otherShip);
+		if (normal == 0) {
+			consequenceIndex = 0;
+		} else {
+			consequenceIndex /= normal;
+		}
+	}
+
+	/**
+	 * set a normalised value for the risk problabilty
+	 */
+	private void setRiskProba() {
+
+		// requires static info
+		double c = getCasualtyRate(vessel.getShipTypeIwrap(), vessel.getLength());
+		double normal = c * (RiskTarget.CAL_PERIOD / (365.25 * 24d * 60d));
+
+		if (vessel.getYearOfBuild() != null) {
+
+			c *= getAgeFactor(new GregorianCalendar().get(Calendar.YEAR) - vessel.getYearOfBuild());
+		}
+		if (vessel.getFlag() != null) {
+			c *= getFlagFactor(vessel.getFlag());
+		}
+
+		riskProba = c * getWindcurrentFactor() * getVisibilityFactor() * getExposure() / normal;
 
 	}
 
@@ -119,11 +146,12 @@ public abstract class IncidentType {
 		return 1.0;
 	}
 
-
 	/**
-	 *  Override for incident specific visiblity factor when visibility is availaible.
+	 * Override for incident specific visiblity factor when visibility is
+	 * availaible.
+	 * 
 	 * @param visibility
-	 *           
+	 * 
 	 * @return
 	 */
 	protected final double getVisibilityFactor() {
@@ -145,38 +173,37 @@ public abstract class IncidentType {
 	}
 
 	protected Double getCasualtyRate(ShipTypeIwrap shipTypeIwrap, double shipsize) {
-		
+
 		SqlSession sess = DBSessionFactory.getSession();
 
 		try {
-			AccidentFrequenceMapper mapper = sess.getMapper(AccidentFrequenceMapper.class);			
+			AccidentFrequenceMapper mapper = sess.getMapper(AccidentFrequenceMapper.class);
 			Map<String, Object> map = new HashMap<String, Object>();
 			map.put("accidentTypeName", getAccidentType().name());
 			map.put("shipTypeName", shipTypeIwrap.getIwrapName());
 			ShipSize size;
-			
-			if(shipsize>200){
+
+			if (shipsize > 200) {
 				size = ShipSize.LARGE;
-			}else if(shipsize<70){
+			} else if (shipsize < 70) {
 				size = ShipSize.SMALL;
-			} else{
+			} else {
 				size = ShipSize.MEDIUM;
 			}
-			
+
 			map.put("shipSize", size.name());
 			return mapper.selectByShipTypeAndAccidentType(map);
 		} finally {
 			sess.close();
 		}
-		
+
 	}
 
-	
-	protected static Double selectAvgByAccidentType(String accidentName){
+	protected static Double selectAvgByAccidentType(String accidentName) {
 		SqlSession sess = DBSessionFactory.getSession();
 
 		try {
-			AccidentFrequenceMapper mapper = sess.getMapper(AccidentFrequenceMapper.class);			
+			AccidentFrequenceMapper mapper = sess.getMapper(AccidentFrequenceMapper.class);
 			return mapper.selectAvgByAccidentType(accidentName);
 		} finally {
 			sess.close();
@@ -238,7 +265,7 @@ public abstract class IncidentType {
 	protected double getTimeToGrounding(double speed, double direction) {
 
 		DepthPoint ground = DepthPoint.findGroundingPoint(vessel.getPos(), direction, vessel.getDraught());
-		if(ground == null){
+		if (ground == null) {
 			/*
 			 * Ingen ground forward
 			 */
@@ -259,9 +286,8 @@ public abstract class IncidentType {
 	public double getRiskProba() {
 		return riskProba;
 	}
-	
+
 	public abstract AccidentType getAccidentType();
-	
 
 	public double getConsequenceIndex() {
 		return consequenceIndex;
@@ -270,21 +296,19 @@ public abstract class IncidentType {
 	public Long getMmsi() {
 		return vessel.getMmsi();
 	}
-	
-	public void save(){
+
+	public void save() {
 		SqlSession sess = DBSessionFactory.getSession();
-		try{
+		try {
 			sess.getMapper(RiskMapper.class).insert(this);
-		}finally{
+		} finally {
 			sess.close();
 		}
 	}
-	
+
 	@SuppressWarnings("unused")
-	private RiskTarget getVessel(){
+	private RiskTarget getVessel() {
 		return vessel;
 	}
 
-
-	
 }

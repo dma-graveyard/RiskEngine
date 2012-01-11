@@ -1,24 +1,18 @@
 package dk.sfs.riskengine.ais;
 
 import java.util.Calendar;
-
 import java.util.Collection;
-import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.log4j.Logger;
 
 import dk.frv.ais.geo.GeoLocation;
-import dk.frv.ais.message.AisMessage18;
 import dk.frv.ais.message.AisMessage5;
 import dk.frv.ais.message.AisPosition;
 import dk.frv.ais.message.AisPositionMessage;
 import dk.frv.ais.message.ShipTypeCargo;
-import dk.sfs.riskengine.consequence.Consequence;
+import dk.frv.ais.reader.AisTcpReader;
 import dk.sfs.riskengine.consequence.Ship;
-import dk.sfs.riskengine.consequence.Ship.PolutionType;
 import dk.sfs.riskengine.geometry.CPA;
 import dk.sfs.riskengine.geometry.Point2d;
 import dk.sfs.riskengine.index.Collision;
@@ -28,15 +22,14 @@ import dk.sfs.riskengine.index.HullFailure;
 import dk.sfs.riskengine.index.MachineryFailure;
 import dk.sfs.riskengine.index.StrandedByMachineFailure;
 import dk.sfs.riskengine.index.StrandedByNavigationError;
-import dk.sfs.riskengine.index.IncidentType.AccidentType;
 import dk.sfs.riskengine.metoc.Metoc;
-import dk.sfs.riskengine.persistence.domain.RiskIndexes;
+import dk.sfs.riskengine.persistence.domain.AisVesselStatic;
 import dk.sfs.riskengine.persistence.domain.Vessel;
 import dk.sfs.riskengine.persistence.domain.Vessel.ShipTypeIwrap;
 
 public class RiskTarget {
 
-	private static final long CAL_PERIOD = 5 * 60l * 1000l; // 5 min
+	public static final long CAL_PERIOD = 10 * 60l * 1000l; // 5 min
 
 	private static final Logger log = Logger.getLogger(RiskTarget.class);
 
@@ -68,15 +61,13 @@ public class RiskTarget {
 	public RiskTarget(AisPositionMessage msg) {
 		super();
 		mmsi = msg.getUserId();
+
 		/*
-		 * try to get the vessel static info from loyds table.
+		 * Get info from ais static
 		 */
-		this.staticInfo = Vessel.getByMmsi(mmsi);
-		if (staticInfo == null) {
-			log.debug("static info not found for mmsi " + mmsi);
-			
-		}
-		
+		AisVesselStatic aisStat = AisVesselStatic.findByMmsi(mmsi);
+		updateStaticInfo(aisStat);
+
 	}
 
 	public boolean hasStaticInfo() {
@@ -88,45 +79,68 @@ public class RiskTarget {
 	 */
 	public void setStaticInfo(AisMessage5 msg) {
 
-		actualDraught = new Double(msg.getDraught())/10.0;
-		/*
-		 * get info from Loyds table with imo number
-		 */
-		imo = msg.getImo();
-		Vessel tmp = Vessel.getByImo(imo);
+		AisVesselStatic aisStat = new AisVesselStatic();
+		aisStat.setDraught(msg.getDraught());
+		aisStat.setDimBow(msg.getDimBow());
+		aisStat.setDimStern(msg.getDimStern());
+		aisStat.setImo(msg.getImo());
+		aisStat.setShipType(msg.getShipType());
+		aisStat.setName(msg.getName());
 
-		if (tmp == null) {
-			log.debug("static info not found for imo" + imo);
-			// TODO trust mmsi ?
-		} else if (staticInfo != null && staticInfo.getMmsi() != mmsi) {
-			log.debug("mmsi - imo dont match. mmsi/imo:" + mmsi + "/" + imo);
+	}
+
+	private void updateStaticInfo(AisVesselStatic aisStat) {
+
+		if (aisStat != null && (staticInfo == null || staticInfo.getImo() == null)) {
 			/*
-			 * mmsi from loyds dont match mmsi i AIS. Update staticInfo.
+			 * Get info from loyds with imo
 			 */
-			staticInfo = tmp;
-			staticInfo.updateMmsiforImo();
-		}
-		
-		/*
-		 * No static info from loyds, take from Ais 
-		 */
-		if (staticInfo == null) {
-			log.debug("static info not found for  mmsi/imo:" + mmsi + "/" + imo);
-
-			/*
-			 * Take info from ais msg but no flag and no yearOfBuild
-			 */
-			
-			int length = msg.getDimBow() + msg.getDimStern();
-			if (length > 0) {
-
-				staticInfo = new Vessel();
-				staticInfo.setLength(Double.valueOf(length));
-				staticInfo.setShipTypeIwrap(ShipTypeIwrap.getShipTypeFromAisType(
-						new ShipTypeCargo(msg.getShipType()).getShipType(), length));
-				staticInfo.setNameOfShip(msg.getName());
+			this.staticInfo = Vessel.getByImo(aisStat.getImo());
+			if (staticInfo != null && staticInfo.getMmsi() != mmsi) {
+				/*
+				 * mmsi from loyds dont match mmsi i AIS. Update staticInfo.
+				 */
+				staticInfo.updateMmsiforImo();
 			}
+
 		}
+
+		if (staticInfo == null) {
+			/*
+			 * Get info from loyds with mmsi
+			 */
+			this.staticInfo = Vessel.getByMmsi(mmsi);
+
+		}
+
+		if (aisStat != null) {
+
+			if (staticInfo == null) {
+				/*
+				 * No info from loyds, get info from ais
+				 */
+				double length = (aisStat.getDimBow() + aisStat.getDimStern()) / 10.0;
+				if (length < 1.0) {
+
+					staticInfo = new Vessel();
+					staticInfo.setLength(Double.valueOf(length));
+					staticInfo.setBreadth(Double.valueOf(aisStat.getDimPort() + aisStat.getDimStarboard()) / 10.0);
+					staticInfo.setShipTypeIwrap(ShipTypeIwrap.getShipTypeFromAisType(
+							new ShipTypeCargo(aisStat.getShipType()).getShipType(), length));
+					staticInfo.setNameOfShip(aisStat.getName());
+				} else {
+					/*
+					 * no loyds, no length ...
+					 */
+					return;
+				}
+			}
+			/*
+			 * Update actual draught
+			 */
+			actualDraught = aisStat.getDraught() / 10.0;
+		}
+
 	}
 
 	public void setPos(AisPosition pos) {
@@ -194,6 +208,9 @@ public class RiskTarget {
 	public void updateRiskIndexes() {
 
 		if (!hasStaticInfo()) {
+			/*
+			 * Dont caclculate with a minimum of static data on the ship
+			 */
 			return;
 		}
 		Metoc metoc = Metoc.getMetocForPosition(pos.getGeoLocation());
@@ -204,11 +221,10 @@ public class RiskTarget {
 		new FireExplosion(metoc, this).save();
 		new MachineryFailure(metoc, this).save();
 
-		if (hasStaticInfo()) {
-			// requires static info
-			new StrandedByMachineFailure(metoc, this).save();
-			new StrandedByNavigationError(metoc, this).save();
-		}
+		// requires static info
+		new StrandedByMachineFailure(metoc, this).save();
+		new StrandedByNavigationError(metoc, this).save();
+
 		new MachineryFailure(metoc, this).save();
 		new HullFailure(metoc, this).save();
 		new Foundering(metoc, this).save();
@@ -275,7 +291,9 @@ public class RiskTarget {
 		Ship ship1 = new Ship();
 		ship1.shiptype = staticInfo.getShipTypeIwrap();
 		Calendar cal = new GregorianCalendar();
-		ship1.age = cal.get(Calendar.YEAR) - staticInfo.getYearOfBuild();
+		if (staticInfo.getYearOfBuild() != null) {
+			ship1.age = cal.get(Calendar.YEAR) - staticInfo.getYearOfBuild();
+		}
 		ship1.loa = staticInfo.getLength(); // m
 		ship1.breadth = staticInfo.getBreadth(); // m
 		ship1.designDraught = staticInfo.getDraught();
@@ -303,5 +321,4 @@ public class RiskTarget {
 		return staticInfo.getNameOfShip();
 	}
 
-	
 }

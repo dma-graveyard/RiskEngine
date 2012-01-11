@@ -6,10 +6,7 @@ import dk.sfs.riskengine.persistence.domain.Vessel.ShipTypeIwrap;
 public class Consequence {
 
 	
-	public static double getConsequence(AccidentType incident, Ship ship1,  double waveHeight , boolean softBottom, double timeFromRescue, double airTemperature) {
-		
-		return getConsequence(incident, ship1, waveHeight, softBottom, timeFromRescue, airTemperature, null); 
-	}
+
 	/**
 	 * @param incident the accident type
 	 * @param ship1  the damaged ship. 

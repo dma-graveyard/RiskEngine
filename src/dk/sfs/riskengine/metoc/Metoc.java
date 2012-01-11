@@ -14,17 +14,23 @@ import dk.frv.enav.common.xml.metoc.single.response.SinglePointMetocResponse;
 public class Metoc {
 
 	private static final Logger log = Logger.getLogger(Metoc.class);
+
+	public static final double DEFAULT_WAWE_HEIGHT = 0.0;
+	public static final double DEFAULT_CURRENT_SPEED = 0.0;
+	public static final double DEFAULT_CURRENT_DIRECTION = 0.0;
+	public static final double DEFAULT_AIR_TEMP = 10.0;
+	
 	
 	/*
 	 * Default values
 	 */
 	private Double windDirection=0.0;
 	private Double windSpeed=0.0;
-	private Double currentDirection=0.0;
-	private Double currentSpeed=0.0;
+	private Double currentDirection=DEFAULT_CURRENT_DIRECTION;
+	private Double currentSpeed=DEFAULT_CURRENT_SPEED;
 	private Double visibility;
-	private Double waweHeight=0.0;
-	private Double airTemp=10.0; 
+	private Double waweHeight=DEFAULT_WAWE_HEIGHT;
+	private Double airTemp=DEFAULT_AIR_TEMP; 
 	private static final Map<MetocKey, Metoc> metocMap = new HashMap<MetocKey, Metoc>();
 
 	private static final Object mutex = new Object();

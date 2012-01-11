@@ -71,7 +71,12 @@ public class Collision {
 		if (penetration<0.005) penetration=0.0;
 		
 		damageWidth=ship2.breadth*0.67/ship1.loa;		//ToDo: Depends also on the penetration
-		hullDamage=(penetration*damageWidth);	//ToDo: Include the height of the damage
+
+		double damageHeight=1.0;                  //Height of the damaged ship.
+		if (ship1.depth!=0.0) damageHeight=ship2.depth/ship1.depth;
+		if (damageHeight >1.0) damageHeight =1.0;  
+		hullDamage=penetration*damageWidth* damageHeight;                            //huldamage is normalized with the size of the ship
+
 		
 		xlocation=Uniform.random(0.0, 1.0);	//Assume uniform probability for the location of the hit
 	}
