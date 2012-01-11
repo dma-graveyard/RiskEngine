@@ -64,8 +64,8 @@ public class ShoreHttp {
 	private HttpClient httpClient;
 	private PostMethod method;
 	
-	private String serverName = "localhost";
-	private int httpPort = 8080;
+	private String serverName = "enav.frv.dk";
+	private int httpPort = 80;
 	private int connectTimeout = 30000;
 	private int readTimeout = 60000;
 	

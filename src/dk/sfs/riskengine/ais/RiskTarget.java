@@ -29,7 +29,7 @@ import dk.sfs.riskengine.persistence.domain.Vessel.ShipTypeIwrap;
 
 public class RiskTarget {
 
-	public static final long CAL_PERIOD = 10 * 60l * 1000l; // 5 min
+	public static final long CAL_PERIOD = 10 * 60l * 1000l; // 10 min
 
 	private static final Logger log = Logger.getLogger(RiskTarget.class);
 
