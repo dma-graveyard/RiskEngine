@@ -27,7 +27,7 @@ public class StrandedByNavigationError extends IncidentType {
 		if (t<3600) {
 			return 	Math.exp(-Math.abs(t/60.0)*0.1);	//Using the same as tcpa
 		}
-		return 0;
+		return 0.0;
 	}
 
 	

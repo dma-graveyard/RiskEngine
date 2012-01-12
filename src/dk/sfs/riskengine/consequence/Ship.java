@@ -310,11 +310,11 @@ public class Ship {
 	// ToDo: Consider using the lightweight to estimate the loadFactor;
 	public double estimateLoadFactor() {
 		loaded = 1.0;
-		if (designDraught > 0.0 && draught != null)
+		if (designDraught > 0.0 && draught != null) {
 			if (draught / designDraught < 0.8)
-				loaded = 0.0; // ToDo: Need to check this. Apply to bulk/tanker
-								// ships
-
+				loaded = 0.0; // Applies to bulk/tanker ships
+		}
+		
 		if (shiptype == ShipTypeIwrap.CONTAINER_SHIP)
 			loaded = Uniform.random(0.4, 1.2);
 		if (shiptype == ShipTypeIwrap.GENERAL_CARGO_SHIP)
@@ -420,8 +420,8 @@ public class Ship {
 		if (includeStocastic)
 			newBuildingCost *= Uniform.random(0.8, 1.2);
 
-		if (age < 20)
-			// assume that the ship depreciates linearly over 20 years
+		if (age < 20.0)
+			// assume the ship depreciates linearly over 20 years
 			valueOfShip = newBuildingCost * (20 - age) / 20.0;
 		else
 			valueOfShip = newBuildingCost / 20.0;
@@ -545,8 +545,8 @@ public class Ship {
 
 		size = a * Math.exp(b * loa);
 		if (includeStocastic)
-			size *= Uniform.random(0.1, 1.0); // The tank might be almost empty
-												// or full
+			size *= Uniform.random(0.2, 1.0); // The tank might be almost empty
+												// or they might be full
 		bunkerTonnage = size;
 		return size;
 	}

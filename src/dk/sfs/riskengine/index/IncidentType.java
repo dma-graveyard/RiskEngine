@@ -29,19 +29,18 @@ public abstract class IncidentType {
 	protected RiskTarget vessel;
 	protected RiskTarget otherVessel;
 
-	private double riskProba;			//The normalised consequence [0-1]	1=the maximum possible consequence
-	protected double consequenceIndex;	//The normalised probability of the incident [0-1]	1=highest probability
-	
 	private double consequence;	//The absolute consequence in mill. $
 	private double probability;	//The absolute probability of the incident
 	private double riskIndex;	//The absolute risk index in mill. $
+	
+	private double probabilityNorm;			//The normalised consequence [0-1]	1=the maximum possible consequence
+	protected double consequenceNorm;	//The normalised probability of the incident [0-1]	1=highest probability
 	private double riskIndexNorm;	//The normalised risk index [0-1]
 	/*
 	 * Default values
 	 */
 	private static final boolean DEFAULT_SOFT_BOTTOM = true; // in Denmark this
-																// is
-	// usually true.
+															 // is usually true.
 	private static final double DEFAULT_TIME_TO_RESCUE = 1.0; // Hours
 
 	public enum AccidentType {
@@ -65,7 +64,6 @@ public abstract class IncidentType {
 		this.metoc = metoc;
 		setRiskProba();
 		setConsequence();
-
 	}
 
 	/**
@@ -85,7 +83,7 @@ public abstract class IncidentType {
 		setConsequence();
 		
 		riskIndex=probability*consequence;
-		riskIndexNorm=riskProba*consequenceIndex;
+		riskIndexNorm=probabilityNorm*consequenceNorm;
 	}
 
 	/**
@@ -106,7 +104,7 @@ public abstract class IncidentType {
 		consequence = Consequence.getConsequence(getAccidentType(), ship1,
 				metoc.getWaweHeight(), DEFAULT_SOFT_BOTTOM, DEFAULT_TIME_TO_RESCUE, metoc.getAirTemp(), otherShip);
 		
-		if (consequence<0.0) consequence=0.0;
+		if (consequence<0.0) consequence=0.0;	//Should not be nessasary, but just in case.
 		
 		/*
 		 * Normalise
@@ -118,11 +116,12 @@ public abstract class IncidentType {
 		//		otherShip);
 		
 		double maximum=Consequence.getMaxConsequence(ship1);
-		if (maximum == 0) {
-			consequenceIndex = 0;
-		} else {
-			consequenceIndex = consequence/maximum;
-		}
+		if (maximum == 0.0)
+			consequenceNorm = 0;
+		else
+			consequenceNorm = consequence/maximum;
+			
+		if (consequenceNorm>1.0) consequenceNorm=1.0;	//Should not be nessasary, but just in case.
 	}
 
 	/**
@@ -142,16 +141,20 @@ public abstract class IncidentType {
 		}
 		
 		probability = c * getWindcurrentFactor() * getVisibilityFactor() * getExposure();
-		if (maximum == 0)
-			riskProba=0.0;
+		if (maximum == 0.0)
+			probabilityNorm=0.0;
 		else
-			riskProba=probability/maximum;
+			probabilityNorm=probability/maximum;
+		
+		if (probabilityNorm>1.0) probabilityNorm=1.0;	//Should not be nessasary, but just in case.
 	}
 
 	protected abstract double getAgeFactorParam();
 
 	protected double getAgeFactor(double age) {
-		return Math.exp(getAgeFactorParam() * age);
+		double age0=age;
+		if (age0>25.0) age0=25.0;
+		return Math.exp(getAgeFactorParam() * age0);
 	}
 	
 	protected double getMaxAgeFactor() {
@@ -172,10 +175,13 @@ public abstract class IncidentType {
 	 * @return
 	 */
 	public double getWindcurrentFactor() {
-		if (metoc.getWindSpeed() > 7.0) {
-			return Math.exp(0.1 * (metoc.getWindSpeed() - 7.0));
+		double f=1.0;
+		double windspeed=metoc.getWindSpeed();
+		if (windspeed>33.0) windspeed=33.0;
+		if (windspeed > 7.0) {
+			f=Math.exp(0.1 * (windspeed - 7.0));
 		}
-		return 1.0;
+		return f;
 	}
 
 	public double getMaxWindcurrentFactor() {
@@ -329,13 +335,13 @@ public abstract class IncidentType {
 	}
 
 	public double getRiskProba() {
-		return riskProba;
+		return probabilityNorm;
 	}
 
 	public abstract AccidentType getAccidentType();
 
 	public double getConsequenceIndex() {
-		return consequenceIndex;
+		return consequenceNorm;
 	}
 
 	public Long getMmsi() {
