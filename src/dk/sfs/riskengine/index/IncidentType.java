@@ -94,11 +94,11 @@ public abstract class IncidentType {
 		Ship otherShip = null;
 		if (otherVessel != null) {
 			otherShip = otherVessel.getConsequenceShip();
-			otherShip.EstimateShipParameters(false);
+			otherShip.EstimateShipParameters(false, false);
 		}
 		
 		// Ship1 is the damaged ship. 
-		ship1.EstimateShipParameters(false); // If possible get them using the
+		ship1.EstimateShipParameters(false, false); // If possible get them using the
 											// ships IMO and lloyds table.
 			
 		consequence = Consequence.getConsequence(getAccidentType(), ship1,

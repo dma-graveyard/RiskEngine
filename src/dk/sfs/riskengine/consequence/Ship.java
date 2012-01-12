@@ -52,7 +52,7 @@ public class Ship {
 		cargoType = PolutionType.None;
 	}
 
-	public void EstimateShipParameters(boolean overWriteCurrentValues) {
+	public void EstimateShipParameters(boolean overWriteCurrentValues, boolean includeStocastic) {
 		if (loa == 0.0)
 			return;
 
@@ -64,9 +64,9 @@ public class Ship {
 			draught = designDraught;
 			estimateDeadweight();
 			estimateLoadFactor();
-			estimateShipValue(true);
-			estimateCargoValue(true);
-			estimateBunkerSize(true);
+			estimateShipValue(includeStocastic);
+			estimateCargoValue(includeStocastic);
+			estimateBunkerSize(includeStocastic);
 			estimateCargoSize();
 			estimateFueltypes();
 			estimateCargoType();
@@ -88,11 +88,11 @@ public class Ship {
 			if (loaded == 0.0)
 				estimateLoadFactor();
 			if (valueOfShip == 0.0)
-				estimateShipValue(true);
+				estimateShipValue(includeStocastic);
 			if (valueOfCargo == 0.0)
-				estimateCargoValue(true);
+				estimateCargoValue(includeStocastic);
 			if (bunkerTonnage == 0.0)
-				estimateBunkerSize(true);
+				estimateBunkerSize(includeStocastic);
 			if (cargoTonnage == 0.0)
 				estimateCargoSize();
 			if (fuelType1 == PolutionType.None)
