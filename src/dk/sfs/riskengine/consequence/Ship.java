@@ -46,10 +46,22 @@ public class Ship {
 	double fuelType2Fraction;
 
 	public Ship() {
-		loa = 0.0;
 		shiptype = ShipTypeIwrap.OTHER_SHIP;
+		loa = 0.0;
+		breadth =0.0;
+		Cb = 0.0;
+		designDraught = 0.0;	
+		draught = null;	
+		deadweight = 0.0;	
+		loaded = 0.0;	
+		valueOfShip = 0.0;	
+		valueOfCargo = 0.0;	
+		bunkerTonnage = 0.0;
+		cargoTonnage = 0.0;
 		fuelType1 = PolutionType.None;
 		cargoType = PolutionType.None;
+		numberOfPersons = 0;
+		depth=0.0;
 	}
 
 	public void EstimateShipParameters(boolean overWriteCurrentValues, boolean includeStocastic) {

@@ -57,8 +57,7 @@ public class Consequence {
 		if (collision.sinks || driftGrnd.sinks || fireExplosion.sinks || hullFailure.sinks || poweredGrnd.sinks
 				|| machineryFailure.sinks)
 			sinks = true; // If its a collision or grounding or explosion and
-							// the ship sinks then we suddenly have a foundering
-							// etc.
+							// the ship sinks then we suddenly have a foundering.
 
 		if (incident == AccidentType.FOUNDERING || sinks)
 			foundering.calcConsequences(ship1, timeFromRescue, airTemperature, waveHeight);

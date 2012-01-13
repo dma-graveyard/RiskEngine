@@ -94,11 +94,11 @@ public abstract class IncidentType {
 		Ship otherShip = null;
 		if (otherVessel != null) {
 			otherShip = otherVessel.getConsequenceShip();
-			otherShip.EstimateShipParameters(false, false);
+			otherShip.EstimateShipParameters(false, true);
 		}
 		
 		// Ship1 is the damaged ship. 
-		ship1.EstimateShipParameters(false, false); // If possible get them using the
+		ship1.EstimateShipParameters(false, true); // If possible get them using the
 											// ships IMO and lloyds table.
 			
 		consequence = Consequence.getConsequence(getAccidentType(), ship1,
@@ -117,7 +117,7 @@ public abstract class IncidentType {
 		
 		double maximum=Consequence.getMaxConsequence(ship1);
 		if (maximum == 0.0)
-			consequenceNorm = 0;
+			consequenceNorm = 0.0;
 		else
 			consequenceNorm = consequence/maximum;
 			
@@ -334,14 +334,30 @@ public abstract class IncidentType {
 		return dist / CPA.KnotsToMs(speed);
 	}
 
-	public double getRiskProba() {
+	public double getProbability() {
+		return probability;
+	}
+	
+	public double getProbabilityNorm() {
 		return probabilityNorm;
 	}
 
 	public abstract AccidentType getAccidentType();
 
-	public double getConsequenceIndex() {
+	public double getConsequenceNorm() {
 		return consequenceNorm;
+	}
+	
+	public double getConsequence() {
+		return consequence;
+	}
+	
+	public double getRiskNormIndex() {
+		return riskIndexNorm;
+	}
+	
+	public double getRiskIndex() {
+		return riskIndex;
 	}
 
 	public Long getMmsi() {
