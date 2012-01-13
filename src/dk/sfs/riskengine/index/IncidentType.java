@@ -353,10 +353,12 @@ public abstract class IncidentType {
 	}
 	
 	public double getRiskIndexNorm() {
+		riskIndexNorm=probabilityNorm*consequenceNorm;
 		return riskIndexNorm;
 	}
 	
 	public double getRiskIndex() {
+		riskIndex=probability*consequence;
 		return riskIndex;
 	}
 

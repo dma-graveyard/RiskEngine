@@ -2,17 +2,16 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="dk.sfs.riskengine.persistence.mapper.RiskMapper" >
   
-   <insert id="insert" parameterType="dk.sfs.riskengine.index.IncidentType" >
-    insert into risks (mmsi, accident_type, 
-      risk_proba, consequence_index, 
-      ship_name, ship_type_iwrap , length ,draught , actual_draught, flag ,year_of_build, lat ,lon, cog, sog 
+   <insert id="insert" parameterType="dk.sfs.riskengine.index.IncidentType" >insert into risks (mmsi, accident_type, 
+      probability_norm, consequence_norm, risk_index_norm, 
+      ship_name, ship_type_iwrap , length ,draught , actual_draught, flag ,year_of_build, lat ,lon, cog, sog,
+      probability, consequence, risk_index 
       )
     values (#{mmsi,jdbcType=INTEGER}, #{accidentType,jdbcType=VARCHAR}, 
-      #{riskProba,jdbcType=DOUBLE}, #{consequenceIndex,jdbcType=DOUBLE}, 
+      #{probabilityNorm,jdbcType=DOUBLE}, #{consequenceNorm,jdbcType=DOUBLE}, #{riskIndexNorm,jdbcType=DOUBLE},
       #{vessel.nameOfShip,jdbcType=VARCHAR}, #{vessel.shipTypeIwrap,jdbcType=VARCHAR}, #{vessel.length,jdbcType=DOUBLE},
       #{vessel.draught,jdbcType=DOUBLE},  #{vessel.actualDraught,jdbcType=DOUBLE},#{vessel.flag,jdbcType=VARCHAR}, #{vessel.yearOfBuild,jdbcType=INTEGER},
       #{vessel.latitude,jdbcType=DOUBLE},#{vessel.longitude,jdbcType=DOUBLE},#{vessel.cog,jdbcType=DOUBLE},#{vessel.sog,jdbcType=DOUBLE}
-      )
-  </insert>
+ ,#{probability,jdbcType=DOUBLE}, #{consequence,jdbcType=DOUBLE} ,#{riskIndex,jdbcType=DOUBLE}     )</insert>
  
 </mapper>
