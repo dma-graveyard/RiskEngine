@@ -3,12 +3,12 @@
 <mapper namespace="dk.sfs.riskengine.persistence.mapper.RiskMapper" >
   
    <insert id="insert" parameterType="dk.sfs.riskengine.index.IncidentType" >insert into risks (mmsi, accident_type, 
-      probability_norm, consequence_norm, risk_index_norm, 
+      probability_normalized, consequence_normalized, risk_index_normalized, 
       ship_name, ship_type_iwrap , length ,draught , actual_draught, flag ,year_of_build, lat ,lon, cog, sog,
       probability, consequence, risk_index 
       )
     values (#{mmsi,jdbcType=INTEGER}, #{accidentType,jdbcType=VARCHAR}, 
-      #{probabilityNorm,jdbcType=DOUBLE}, #{consequenceNorm,jdbcType=DOUBLE}, #{riskIndexNorm,jdbcType=DOUBLE},
+      #{probabilityNormalized,jdbcType=DOUBLE}, #{consequenceNormalized,jdbcType=DOUBLE}, #{riskIndexNormalized,jdbcType=DOUBLE},
       #{vessel.nameOfShip,jdbcType=VARCHAR}, #{vessel.shipTypeIwrap,jdbcType=VARCHAR}, #{vessel.length,jdbcType=DOUBLE},
       #{vessel.draught,jdbcType=DOUBLE},  #{vessel.actualDraught,jdbcType=DOUBLE},#{vessel.flag,jdbcType=VARCHAR}, #{vessel.yearOfBuild,jdbcType=INTEGER},
       #{vessel.latitude,jdbcType=DOUBLE},#{vessel.longitude,jdbcType=DOUBLE},#{vessel.cog,jdbcType=DOUBLE},#{vessel.sog,jdbcType=DOUBLE}

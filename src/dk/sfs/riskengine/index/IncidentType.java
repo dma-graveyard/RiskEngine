@@ -33,9 +33,9 @@ public abstract class IncidentType {
 	private double probability;	//The absolute probability of the incident
 	private double riskIndex;	//The absolute risk index in mill. $
 	
-	private double probabilityNorm;			//The normalised consequence [0-1]	1=the maximum possible consequence
-	protected double consequenceNorm;	//The normalised probability of the incident [0-1]	1=highest probability
-	private double riskIndexNorm;	//The normalised risk index [0-1]
+	private double probabilityNormalized;			//The normalized consequence [0-1]	1=the maximum possible consequence
+	protected double consequenceNormalized;	//The normalized probability of the incident [0-1]	1=highest probability
+	private double riskIndexNormalized;	//The normalized risk index [0-1]
 	/*
 	 * Default values
 	 */
@@ -62,8 +62,11 @@ public abstract class IncidentType {
 		super();
 		this.vessel = target;
 		this.metoc = metoc;
-		setRiskProba();
+		setProbability();
 		setConsequence();
+		
+		riskIndex=probability*consequence;
+		riskIndexNormalized=probabilityNormalized*consequenceNormalized;
 	}
 
 	/**
@@ -79,11 +82,11 @@ public abstract class IncidentType {
 		this.vessel = target;
 		this.metoc = metoc;
 		this.otherVessel = other;
-		setRiskProba();
+		setProbability();
 		setConsequence();
 		
 		riskIndex=probability*consequence;
-		riskIndexNorm=probabilityNorm*consequenceNorm;
+		riskIndexNormalized=probabilityNormalized*consequenceNormalized;
 	}
 
 	/**
@@ -117,17 +120,17 @@ public abstract class IncidentType {
 		
 		double maximum=Consequence.getMaxConsequence(ship1);
 		if (maximum == 0.0)
-			consequenceNorm = 0.0;
+			consequenceNormalized = 0.0;
 		else
-			consequenceNorm = consequence/maximum;
+			consequenceNormalized = consequence/maximum;
 			
-		if (consequenceNorm>1.0) consequenceNorm=1.0;	//Should not be nessasary, but just in case.
+		if (consequenceNormalized>1.0) consequenceNormalized=1.0;	//Should not be nessasary, but just in case.
 	}
 
 	/**
 	 * set a normalised value for the risk problabilty
 	 */
-	private void setRiskProba() {
+	private void setProbability() {
 		// requires static info
 		double c = getCasualtyRate(vessel.getShipTypeIwrap(), vessel.getLength());
 		c*=(RiskTarget.CAL_PERIOD / (365.25 * 24d * 60d));
@@ -142,11 +145,11 @@ public abstract class IncidentType {
 		
 		probability = c * getWindcurrentFactor() * getVisibilityFactor() * getExposure();
 		if (maximum == 0.0)
-			probabilityNorm=0.0;
+			probabilityNormalized=0.0;
 		else
-			probabilityNorm=probability/maximum;
+			probabilityNormalized=probability/maximum;
 		
-		if (probabilityNorm>1.0) probabilityNorm=1.0;	//Should not be nessasary, but just in case.
+		if (probabilityNormalized>1.0) probabilityNormalized=1.0;	//Should not be nessasary, but just in case.
 	}
 
 	protected abstract double getAgeFactorParam();
@@ -338,23 +341,23 @@ public abstract class IncidentType {
 		return probability;
 	}
 	
-	public double getProbabilityNorm() {
-		return probabilityNorm;
+	public double getProbabilityNormalized() {
+		return probabilityNormalized;
 	}
 
 	public abstract AccidentType getAccidentType();
 
-	public double getConsequenceNorm() {
-		return consequenceNorm;
+	public double getConsequenceNormalized() {
+		return consequenceNormalized;
 	}
 	
 	public double getConsequence() {
 		return consequence;
 	}
 	
-	public double getRiskIndexNorm() {
-		riskIndexNorm=probabilityNorm*consequenceNorm;
-		return riskIndexNorm;
+	public double getRiskIndexNormalized() {
+		riskIndexNormalized=probabilityNormalized*consequenceNormalized;
+		return riskIndexNormalized;
 	}
 	
 	public double getRiskIndex() {
