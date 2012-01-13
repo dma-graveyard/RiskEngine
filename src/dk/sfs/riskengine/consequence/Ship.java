@@ -82,7 +82,7 @@ public class Ship {
 			estimateCargoSize();
 			estimateFueltypes();
 			estimateCargoType();
-			estimateNumberOfPersons();
+			estimateNumberOfPersons(includeStocastic);
 			estimateDepth();
 			
 		} else // Overwrite only if value is missing
@@ -112,7 +112,7 @@ public class Ship {
 			if (cargoType == PolutionType.None)
 				estimateCargoType();
 			if (numberOfPersons == 0)
-				estimateNumberOfPersons();
+				estimateNumberOfPersons(includeStocastic);
 			if (depth==0.0) estimateDepth();
 		}
 
@@ -356,58 +356,59 @@ public class Ship {
 		double newBuildingCost = 0.0; // million US dollar
 		double l = loa;
 		if (shiptype == ShipTypeIwrap.CRUDE_OIL_TANKER || shiptype == ShipTypeIwrap.OIL_PRODUCTS_TANKER) {
-			if (loa > 400)
-				l = 400;
+			if (loa > 400.0)
+				l = 400.0;
 			newBuildingCost = 6.77 * Math.exp(0.008 * l);
 		}
 
 		if (shiptype == ShipTypeIwrap.CHEMICAL_TANKER) {
 			if (loa > 250)
-				l = 250;
+				l = 250.0;
 			newBuildingCost = 3.48 * Math.exp(0.013 * l);
 		}
 
 		if (shiptype == ShipTypeIwrap.GAS_TANKER) {
 			if (loa > 350)
-				l = 350;
+				l = 350.0;
 			newBuildingCost = 5.89 * Math.exp(0.012 * l);
 		}
 
 		if (shiptype == ShipTypeIwrap.BULK_CARRIER) {
 			if (loa > 350)
-				l = 350;
+				l = 350.0;
 			newBuildingCost = 3.33 * Math.exp(0.010 * l);
 		}
 
 		if (shiptype == ShipTypeIwrap.CONTAINER_SHIP) {
 			if (loa > 375)
-				l = 375;
+				l = 375.0;
 			newBuildingCost = 4.59 * Math.exp(0.010 * l);
 		}
 
 		if (shiptype == ShipTypeIwrap.GENERAL_CARGO_SHIP) {
 			if (loa > 225)
-				l = 225;
+				l = 225.0;
 			newBuildingCost = 1.09 * Math.exp(0.017 * l);
 		}
 
 		if (shiptype == ShipTypeIwrap.RO_RO_CARGO_SHIP) {
 			if (loa > 275)
-				l = 275;
+				l = 275.0;
 			newBuildingCost = 1.5871 * Math.exp(0.016 * l);
 		}
 
 		if (shiptype == ShipTypeIwrap.PASSENGER_SHIP) {
 			if (loa > 350)
-				l = 350;
+				l = 350.0;
 			newBuildingCost = 3.31 * Math.exp(0.017 * l);
 		}
 
 		if (shiptype == ShipTypeIwrap.FAST_FERRY) {
 			if (loa > 160)
-				l = 160;
+				l = 160.0;
 			newBuildingCost = 2.99 * Math.exp(0.024 * l);
 		}
+		newBuildingCost *=2.0;	//Have a feeling that the above costs are too low
 
 		if (shiptype == ShipTypeIwrap.SUPPORT_SHIP) {
 			newBuildingCost = 0.5 * loa; // Not documented. Just a quick
@@ -429,8 +430,9 @@ public class Ship {
 											// estimate
 		}
 
+		
 		if (includeStocastic)
-			newBuildingCost *= Uniform.random(0.8, 1.2);
+			newBuildingCost *= Uniform.random(0.7, 1.4);
 
 		if (age < 20.0)
 			// assume the ship depreciates linearly over 20 years
@@ -711,22 +713,28 @@ public class Ship {
 		return;
 	}
 
-	public int estimateNumberOfPersons() {
+	public int estimateNumberOfPersons(boolean includeStocastic) {
+		double l=loa;
 		if (shiptype == ShipTypeIwrap.PASSENGER_SHIP || shiptype == ShipTypeIwrap.FAST_FERRY) {
-			if (loa <= 100)
-				numberOfPersons = (int) Uniform.random(50, 250);
-			if (loa > 100 && loa <= 200)
-				numberOfPersons = (int) Uniform.random(250, 1000);
-			if (loa > 200)
-				numberOfPersons = (int) Uniform.random(1000, 4000);
+			if (l>350.0) l=350.0;
+			numberOfPersons=(int) Math.round(209*Math.exp(0.0087*l));
+			if (includeStocastic) numberOfPersons=(int) (numberOfPersons*Uniform.random(0.8, 1.2));
 		} else {
-			numberOfPersons = (int) Uniform.random(10, 30);
+			if (loa<120.0) 
+				numberOfPersons=6;
+			else
+				numberOfPersons=15;
+			if (includeStocastic) numberOfPersons=(int) (numberOfPersons*Uniform.random(0.8, 1.2));
 		}
 
-		if (shiptype == ShipTypeIwrap.PLEASURE_BOAT)
-			numberOfPersons = (int) Uniform.random(1, 6);
-		if (shiptype == ShipTypeIwrap.FISHING_SHIP)
-			numberOfPersons = (int) Uniform.random(1, 6);
+		if (shiptype == ShipTypeIwrap.PLEASURE_BOAT) {
+			numberOfPersons = 2;
+			if (includeStocastic) numberOfPersons=(int) (numberOfPersons+(int)Uniform.random(-1, 5));
+		}
+		if (shiptype == ShipTypeIwrap.FISHING_SHIP) {
+			numberOfPersons = 2;
+			if (includeStocastic) numberOfPersons=(int) (numberOfPersons+(int)Uniform.random(-1, 5));
+		}
 
 		return numberOfPersons;
 	}

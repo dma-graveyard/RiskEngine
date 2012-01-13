@@ -97,11 +97,11 @@ public abstract class IncidentType {
 		Ship otherShip = null;
 		if (otherVessel != null) {
 			otherShip = otherVessel.getConsequenceShip();
-			otherShip.EstimateShipParameters(false, true);
+			otherShip.EstimateShipParameters(false, false);
 		}
 		
 		// Ship1 is the damaged ship. 
-		ship1.EstimateShipParameters(false, true); // If possible get them using the
+		ship1.EstimateShipParameters(false, false); // If possible get them using the
 											// ships IMO and lloyds table.
 			
 		consequence = Consequence.getConsequence(getAccidentType(), ship1,
@@ -356,12 +356,12 @@ public abstract class IncidentType {
 	}
 	
 	public double getRiskIndexNormalized() {
-		riskIndexNormalized=probabilityNormalized*consequenceNormalized;
+		riskIndexNormalized=probabilityNormalized*consequenceNormalized;	//Should be somewhere else. Make sure they have been calculated
 		return riskIndexNormalized;
 	}
 	
 	public double getRiskIndex() {
-		riskIndex=probability*consequence;
+		riskIndex=probability*consequence;	//Should be somewhere else. Make sure they have been calculated
 		return riskIndex;
 	}
 
