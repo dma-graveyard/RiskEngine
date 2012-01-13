@@ -352,7 +352,7 @@ public abstract class IncidentType {
 		return consequence;
 	}
 	
-	public double getRiskNormIndex() {
+	public double getRiskIndexNorm() {
 		return riskIndexNorm;
 	}
 	
