@@ -56,6 +56,7 @@ public class HullFailure {
 	
 	private void estimateDamage(Ship ship1) {
 		hullDamage=Exponential.random(5.0);	//TODO: Include waves
+		if (hullDamage<0.1) hullDamage=0.1;
 		cargoDamage=hullDamage;
 		if (hullDamage>0.65) {
 			sinks=true;

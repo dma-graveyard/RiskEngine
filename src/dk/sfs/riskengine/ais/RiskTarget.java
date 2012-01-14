@@ -324,6 +324,8 @@ public class RiskTarget {
 
 		
 		//Calculates the total risk index
+		//TODO: Here we let the probabilities of the different incidents be independent 
+		//of each other. We should consider how much this affects the result. 
 		if (maxProbability>1.0) maxProbability=1.0;
 		if (totalConsequence>maxConsequence) totalConsequence=maxConsequence;
 		
@@ -337,7 +339,7 @@ public class RiskTarget {
 		if (maxProbability*maxConsequence>0.0)
 			riskIndexNormalized=riskIndex/(maxProbability*maxConsequence);
 		
-		//This is just to get the total written to the db. MachineryFailure is not used
+		//This is just to get the total written to the db. MachineryFailure is not used elsewhere
 		machineryFailure.setConsequence(totalConsequence);
 		machineryFailure.setProbability(totalProbability);
 		machineryFailure.setRiskIndex(riskIndex);
@@ -412,7 +414,7 @@ public class RiskTarget {
 		}
 		ship1.loa = staticInfo.getLength(); // m
 		ship1.breadth = staticInfo.getBreadth(); // m
-		ship1.designDraught = staticInfo.getDraught();
+		ship1.designDraught = staticInfo.getDraught();	//TODO: The program often fails on this line!!!
 		ship1.draught = actualDraught;
 
 		ship1.deadweight = staticInfo.getDeadweight();

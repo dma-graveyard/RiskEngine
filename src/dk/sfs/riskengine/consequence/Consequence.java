@@ -5,15 +5,18 @@ import dk.sfs.riskengine.persistence.domain.Vessel.ShipTypeIwrap;
 
 public class Consequence {
 
-	
+	private double pollutionCost;	// million US dollar
+	private double materialCost;		// million US dollar
+	private double humanCost;		// million US dollar
 
 	/**
+	 * Must be called first before the private parameters can be fetched!!!!!
 	 * @param incident the accident type
 	 * @param ship1  the damaged ship. 
 	 * @param ship2 striking ship in case of collision 
 	 * @return
 	 */
-	public static double getConsequence(AccidentType incident, Ship ship1,  double waveHeight , boolean softBottom, double timeFromRescue, double airTemperature, Ship ship2 ) {
+	public double getConsequence(AccidentType incident, Ship ship1,  double waveHeight , boolean softBottom, double timeFromRescue, double airTemperature, Ship ship2 ) {
 
 		// Store original values because they are manipulated in the following
 		// functions
@@ -62,14 +65,15 @@ public class Consequence {
 		if (incident == AccidentType.FOUNDERING || sinks)
 			foundering.calcConsequences(ship1, timeFromRescue, airTemperature, waveHeight);
 
-		double polutionCost = estimatePolutionCost(ship1, incident, foundering, collision, poweredGrnd, driftGrnd,
+		pollutionCost = estimatePolutionCost(ship1, incident, foundering, collision, poweredGrnd, driftGrnd,
 				fireExplosion, hullFailure, machineryFailure);
-		double livesCost = estimateLossOfLife(foundering, collision, poweredGrnd, driftGrnd, fireExplosion,
+		humanCost = estimateLossOfLife(foundering, collision, poweredGrnd, driftGrnd, fireExplosion,
 				hullFailure, machineryFailure);
-		double materialCost = estimateMaterialCost(foundering, collision, poweredGrnd, driftGrnd, fireExplosion,
+		materialCost = estimateMaterialCost(foundering, collision, poweredGrnd, driftGrnd, fireExplosion,
 				hullFailure, machineryFailure);
 		
-		double totalCost = polutionCost + livesCost + materialCost;
+		double totalCost = pollutionCost + humanCost + materialCost;
+		if (totalCost<0.0) totalCost=0.0; //Should not be nesersary, but just in case.
 
 		// Restore original values. Important if the ship is used in another
 		// calculation
@@ -82,23 +86,23 @@ public class Consequence {
 	
 	
 	//Estimates the maximum possible consequence
-	public static double getMaxConsequence(Ship ship1) {
+	public double getMaxConsequence(Ship ship1) {
 		
-		double materialCost=ship1.valueOfShip+ship1.valueOfCargo;
-		double lossOfLives=ship1.numberOfPersons*LossOfLives.costOfLife;
+		double maxMaterialCost=ship1.valueOfShip+ship1.valueOfCargo;
+		double maxLossOfLives=ship1.numberOfPersons*LossOfLives.costOfLife;
 		
 		//Spill costs
 		double fuel1=ship1.fuelType1Fraction*ship1.bunkerTonnage;
 		double fuel2=ship1.fuelType2Fraction*ship1.bunkerTonnage;
 		double cargoOil=0.0;
-		//Only oil tankers can polute in this model.
+		//Only oil tankers can pollute in this model.
 		if (ship1.shiptype == ShipTypeIwrap.CRUDE_OIL_TANKER || ship1.shiptype == ShipTypeIwrap.OIL_PRODUCTS_TANKER) {
 			cargoOil=ship1.cargoTonnage;
 		}
 		double spillsize = fuel1 + fuel2 + cargoOil;
-		double polutionCost = PolutionCost.totalEstimate(spillsize);
+		double maxPolutionCost = PolutionCost.totalEstimate(spillsize);
 		
-		double maxCost=materialCost + lossOfLives + polutionCost;
+		double maxCost=maxMaterialCost + maxLossOfLives + maxPolutionCost;
 		return maxCost;
 	}
 
@@ -107,7 +111,7 @@ public class Consequence {
 	// Todo: Include weather. Does the oil evaporate or does it drift away from
 	// shore?
 	// Include different cost for different oil types
-	public static double estimatePolutionCost(Ship ship1, AccidentType incident, Foundering foundering, Collision collision,
+	public double estimatePolutionCost(Ship ship1, AccidentType incident, Foundering foundering, Collision collision,
 			PoweredGrounding poweredGrnd, DriftGrounding driftGrnd, FireExplosion fireExplosion,
 			HullFailure hullFailure, MachineryFailure machineryFailure) {
 
@@ -141,14 +145,14 @@ public class Consequence {
 		}
 
 		double spillsize = fuel1 + fuel2 + cargoOil;
-		double polutionCost = PolutionCost.totalEstimate(spillsize);
-		return polutionCost;
+		pollutionCost = PolutionCost.totalEstimate(spillsize);
+		return pollutionCost;
 	}
 
-	public static double estimateLossOfLife(Foundering foundering, Collision collision, PoweredGrounding poweredGrnd,
+	
+	public double estimateLossOfLife(Foundering foundering, Collision collision, PoweredGrounding poweredGrnd,
 			DriftGrounding driftGrnd, FireExplosion fireExplosion, HullFailure hullFailure,
 			MachineryFailure machineryFailure) {
-		double cost = 0.0; // mill. US dollar
 		double nLives = 0.0;
 
 		nLives += foundering.livesLost;
@@ -159,12 +163,13 @@ public class Consequence {
 		nLives += hullFailure.livesLost;
 		nLives += machineryFailure.livesLost;
 
-		cost = nLives * LossOfLives.costOfLife;
-		return cost;
+		humanCost = nLives * LossOfLives.costOfLife;
+		return humanCost;
 	}
 
+	
 	// This is the damage to the ship and the damage to the cargo
-	public static double estimateMaterialCost(Foundering foundering, Collision collision, PoweredGrounding poweredGrnd,
+	public double estimateMaterialCost(Foundering foundering, Collision collision, PoweredGrounding poweredGrnd,
 			DriftGrounding driftGrnd, FireExplosion fireExplosion, HullFailure hullFailure,
 			MachineryFailure machineryFailure) {
 		double cost = 0.0; // mill. US dollar
@@ -176,7 +181,21 @@ public class Consequence {
 		cost += fireExplosion.materialCost;
 		cost += hullFailure.materialCost;
 		cost += machineryFailure.materialCost;
-		return cost;
+		materialCost=cost;
+		return materialCost;
 	}
 
+	
+	//Must be estimated before they can be fetched!!!!!
+	public double getHumanCost() {
+		return humanCost;
+	}
+	
+	public double getPollutionCost() {
+		return pollutionCost;
+	}
+	
+	public double getMaterialCost() {
+		return materialCost;
+	}
 }

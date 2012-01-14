@@ -29,8 +29,12 @@ public abstract class IncidentType {
 	protected RiskTarget vessel;
 	protected RiskTarget otherVessel;
 
-	private double maxConsequence;
-	private double maxProbability;
+	private double pollutionCost;	//million US dollars
+	private double materialCost;	//million US dollars
+	private double humanCost;		//million US dollars
+	
+	private double maxConsequence;	//The cost if the ship sink, everybody dies and all the oil pollutes the coast line
+	private double maxProbability;	//The probability of the incident when all parameters are bad, (wind, age, etc.)
 	
 	private double consequence;	//The absolute consequence in mill. $
 	private double probability;	//The absolute probability of the incident
@@ -56,7 +60,7 @@ public abstract class IncidentType {
 
 	/**
 	 * Instantiate and calculate risk index and consequence index for incident
-	 * invloving own ship only
+	 * involving own ship only
 	 * 
 	 * @param metoc
 	 * @param target
@@ -106,11 +110,14 @@ public abstract class IncidentType {
 		// Ship1 is the damaged ship. 
 		ship1.EstimateShipParameters(false, false); // If possible get them using the
 											// ships IMO and lloyds table.
-			
-		consequence = Consequence.getConsequence(getAccidentType(), ship1,
+		Consequence consequenceObj=new Consequence();
+		
+		consequence = consequenceObj.getConsequence(getAccidentType(), ship1,
 				metoc.getWaweHeight(), DEFAULT_SOFT_BOTTOM, DEFAULT_TIME_TO_RESCUE, metoc.getAirTemp(), otherShip);
 		
-		if (consequence<0.0) consequence=0.0;	//Should not be nessasary, but just in case.
+		pollutionCost=consequenceObj.getPollutionCost();
+		humanCost=consequenceObj.getHumanCost();
+		materialCost=consequenceObj.getMaterialCost();
 		
 		/*
 		 * Normalise
@@ -121,13 +128,13 @@ public abstract class IncidentType {
 		//		Metoc.DEFAULT_WAWE_HEIGHT, DEFAULT_SOFT_BOTTOM, DEFAULT_TIME_TO_RESCUE, Metoc.DEFAULT_AIR_TEMP,
 		//		otherShip);
 		
-		maxConsequence=Consequence.getMaxConsequence(ship1);
+		maxConsequence=consequenceObj.getMaxConsequence(ship1);
 		if (maxConsequence == 0.0)
 			consequenceNormalized = 0.0;
 		else
 			consequenceNormalized = consequence/maxConsequence;
 			
-		if (consequenceNormalized>1.0) consequenceNormalized=1.0;	//Should not be nessasary, but just in case.
+		if (consequenceNormalized>1.0) consequenceNormalized=1.0;	//Should not be nesersary, but just in case.
 	}
 
 	/**
@@ -342,6 +349,19 @@ public abstract class IncidentType {
 	
 	public abstract AccidentType getAccidentType();
 	
+	
+	//Must be estimated before they can be fetched
+	public double getHumanCost() {
+		return humanCost;
+	}
+	
+	public double getPollutionCost() {
+		return pollutionCost;
+	}
+	
+	public double getMaterialCost() {
+		return materialCost;
+	}
 	
 	public double getMaxProbability() {
 		return maxProbability;
