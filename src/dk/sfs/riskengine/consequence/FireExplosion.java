@@ -57,10 +57,10 @@ public class FireExplosion {
 	
 	
 	private void estimateDamage(Ship ship1) {
-		hullDamage=Exponential.random(3.0);
+		hullDamage=Exponential.random(10.0);
 		if (hullDamage>1.0) hullDamage=1.0;
 		cargoDamage=hullDamage;
-		if (hullDamage>0.6) {
+		if (hullDamage>0.65) {
 			sinks=true;
 			timeToSink=Uniform.random(1.0, 5.0);	//Uniformly between 1 and 5 hours
 		}

@@ -29,6 +29,9 @@ public abstract class IncidentType {
 	protected RiskTarget vessel;
 	protected RiskTarget otherVessel;
 
+	private double maxConsequence;
+	private double maxProbability;
+	
 	private double consequence;	//The absolute consequence in mill. $
 	private double probability;	//The absolute probability of the incident
 	private double riskIndex;	//The absolute risk index in mill. $
@@ -71,7 +74,7 @@ public abstract class IncidentType {
 
 	/**
 	 * Instantiate and calculate risk index and consequence index for incident
-	 * invloving own ship and another ship, i.e collision
+	 * involving own ship and another ship, i.e collision
 	 * 
 	 * @param metoc
 	 * @param target
@@ -118,23 +121,23 @@ public abstract class IncidentType {
 		//		Metoc.DEFAULT_WAWE_HEIGHT, DEFAULT_SOFT_BOTTOM, DEFAULT_TIME_TO_RESCUE, Metoc.DEFAULT_AIR_TEMP,
 		//		otherShip);
 		
-		double maximum=Consequence.getMaxConsequence(ship1);
-		if (maximum == 0.0)
+		maxConsequence=Consequence.getMaxConsequence(ship1);
+		if (maxConsequence == 0.0)
 			consequenceNormalized = 0.0;
 		else
-			consequenceNormalized = consequence/maximum;
+			consequenceNormalized = consequence/maxConsequence;
 			
 		if (consequenceNormalized>1.0) consequenceNormalized=1.0;	//Should not be nessasary, but just in case.
 	}
 
 	/**
-	 * set a normalised value for the risk problabilty
+	 * set a normalised value for the risk probability
 	 */
 	private void setProbability() {
 		// requires static info
 		double c = getCasualtyRate(vessel.getShipTypeIwrap(), vessel.getLength());
 		c*=(RiskTarget.CAL_PERIOD / (365.25 * 24d * 60d));
-		double maximum = c*getMaxAgeFactor()*getMaxFlagFactor()*getMaxWindcurrentFactor()*getMaxVisibilityFactor() * getMaxExposure();
+		maxProbability = c*getMaxAgeFactor()*getMaxFlagFactor()*getMaxWindcurrentFactor()*getMaxVisibilityFactor() * getMaxExposure();
 
 		if (vessel.getYearOfBuild() != null) {
 			c *= getAgeFactor(new GregorianCalendar().get(Calendar.YEAR) - vessel.getYearOfBuild());
@@ -144,14 +147,15 @@ public abstract class IncidentType {
 		}
 		
 		probability = c * getWindcurrentFactor() * getVisibilityFactor() * getExposure();
-		if (maximum == 0.0)
+		if (maxProbability == 0.0)
 			probabilityNormalized=0.0;
 		else
-			probabilityNormalized=probability/maximum;
+			probabilityNormalized=probability/maxProbability;
 		
-		if (probabilityNormalized>1.0) probabilityNormalized=1.0;	//Should not be nessasary, but just in case.
+		if (probabilityNormalized>1.0) probabilityNormalized=1.0;	//Should not be nesesary, but just in case.
 	}
 
+	
 	protected abstract double getAgeFactorParam();
 
 	protected double getAgeFactor(double age) {
@@ -179,21 +183,21 @@ public abstract class IncidentType {
 	 */
 	public double getWindcurrentFactor() {
 		double f=1.0;
+		double maxWindSpeeed=45.0;
 		double windspeed=metoc.getWindSpeed();
-		if (windspeed>33.0) windspeed=33.0;
-		if (windspeed > 7.0) {
-			f=Math.exp(0.1 * (windspeed - 7.0));
-		}
+		if (windspeed>maxWindSpeeed) windspeed=maxWindSpeeed;
+		f=Math.exp(0.03 * windspeed);
 		return f;
 	}
 
 	public double getMaxWindcurrentFactor() {
-		return Math.exp(0.1 * (33.0 - 7.0));
+		double maxWindSpeeed=45.0;
+		return Math.exp(0.03 * maxWindSpeeed);
 	}
 	
 	/**
-	 * Override for incident specific visiblity factor when visibility is
-	 * availaible.
+	 * Override for incident specific visibility factor when visibility is
+	 * available.
 	 * 
 	 * @param visibility
 	 * 
@@ -273,7 +277,7 @@ public abstract class IncidentType {
 		/*
 		 * Build a wind vector
 		 */
-		// Translate windspeed into a speed vector. Winddirection is opposite.
+		// Translate wind speed into a speed vector. Wind direction is opposite.
 		double angle = Geofunctions.compass2cartesian(metoc.getWindDirection()) + 180.0;
 
 		if (angle >= 360.0) {
@@ -286,14 +290,13 @@ public abstract class IncidentType {
 		w = w.Multiply(metoc.getWindSpeed() * 0.15);
 
 		/*
-		 * Buils a current vector
+		 * Builds a current vector
 		 */
 		angle = Geofunctions.compass2cartesian(metoc.getCurrentDirection());
 		Point2d c = Point2d.getUnitVector(angle);
 		c = c.Multiply(metoc.getCurrentSpeed() * 0.514444);
 
 		// Add vectors
-
 		Point2d p = w.Plus(c);
 
 		Point2d rst = new Point2d();
@@ -336,7 +339,18 @@ public abstract class IncidentType {
 		 */
 		return dist / CPA.KnotsToMs(speed);
 	}
-
+	
+	public abstract AccidentType getAccidentType();
+	
+	
+	public double getMaxProbability() {
+		return maxProbability;
+	}
+	
+	public double getMaxConsequence() {
+		return maxConsequence;
+	}
+	
 	public double getProbability() {
 		return probability;
 	}
@@ -345,8 +359,6 @@ public abstract class IncidentType {
 		return probabilityNormalized;
 	}
 
-	public abstract AccidentType getAccidentType();
-
 	public double getConsequenceNormalized() {
 		return consequenceNormalized;
 	}
@@ -354,6 +366,32 @@ public abstract class IncidentType {
 	public double getConsequence() {
 		return consequence;
 	}
+	
+	//The following 6 set methods should only be used in special cases
+	public void setProbability(double x) {
+		probability=x;
+	}
+	
+	public void setProbabilityNormalized(double x) {
+		probabilityNormalized=x;
+	}
+
+	public void setConsequenceNormalized(double x) {
+		consequenceNormalized=x;
+	}
+	
+	public void setConsequence(double x) {
+		consequence=x;
+	}
+	
+	public void setRiskIndexNormalized(double x) {
+		riskIndexNormalized=x;
+	}
+	
+	public void setRiskIndex(double x) {
+		riskIndex=x;
+	}
+
 	
 	public double getRiskIndexNormalized() {
 		riskIndexNormalized=probabilityNormalized*consequenceNormalized;	//Should be somewhere else. Make sure they have been calculated

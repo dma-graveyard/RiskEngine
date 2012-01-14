@@ -55,11 +55,11 @@ public class HullFailure {
 	
 	
 	private void estimateDamage(Ship ship1) {
-		hullDamage=Exponential.random(3.5);
+		hullDamage=Exponential.random(5.0);	//TODO: Include waves
 		cargoDamage=hullDamage;
-		if (hullDamage>0.7) {
+		if (hullDamage>0.65) {
 			sinks=true;
-			timeToSink=Uniform.random(0.4, 2.0); //Need better estimate
+			timeToSink=Uniform.random(0.3, 2.0); //Need better estimate
 		}
 	}
 	
