@@ -57,7 +57,7 @@ public class FireExplosion {
 	
 	
 	private void estimateDamage(Ship ship1) {
-		hullDamage=Exponential.random(10.0);
+		hullDamage=Exponential.random(10.0);	//Arbitrarly. Just to get a value. TODO: Include ship type.
 		if (hullDamage<0.05) hullDamage=0.05;
 		if (hullDamage>1.0) hullDamage=1.0;
 		cargoDamage=hullDamage;

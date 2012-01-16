@@ -7,8 +7,8 @@ import dk.sfs.riskengine.consequence.Ship.ShipType;
 
 
 public class HullFailure {
-	public double penetration;		//
-	public double damageWidth;		//
+	public double penetration;		//fraction of ship1's width
+	public double damageWidth;		//fraction of ship1's length
 	public double xlocation;		//fraction of ship1's length
 	public boolean sinks;			//Yes or no
 	public double timeToSink;		//hours
@@ -55,7 +55,7 @@ public class HullFailure {
 	
 	
 	private void estimateDamage(Ship ship1) {
-		hullDamage=Exponential.random(5.0);	//TODO: Include waves
+		hullDamage=Exponential.random(5.0);	//Arbitrarly. Just to get a value. TODO: Include waves and ship type.
 		if (hullDamage<0.1) hullDamage=0.1;
 		cargoDamage=hullDamage;
 		if (hullDamage>0.65) {

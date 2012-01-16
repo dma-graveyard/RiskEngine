@@ -326,9 +326,11 @@ public class RiskTarget {
 		//Calculates the total risk index
 		//TODO: Here we let the probabilities of the different incidents be independent 
 		//of each other. We should consider how much this affects the result. 
-		if (maxProbability>1.0) maxProbability=1.0;
-		if (totalConsequence>maxConsequence) totalConsequence=maxConsequence;
-		
+		if (maxProbability>1.0) {
+			maxProbability=1.0;}
+		if (totalConsequence>maxConsequence) { 
+			totalConsequence=maxConsequence;
+		}
 		double probabilityNormalized=0.0;
 		if (maxProbability>0.0) probabilityNormalized=totalProbability/maxProbability;
 		double consequenceNormalized=0.0;
