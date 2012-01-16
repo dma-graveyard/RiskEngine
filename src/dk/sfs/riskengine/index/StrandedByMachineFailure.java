@@ -3,6 +3,7 @@ package dk.sfs.riskengine.index;
 import dk.sfs.riskengine.ais.RiskTarget;
 import dk.sfs.riskengine.geometry.Point2d;
 import dk.sfs.riskengine.metoc.Metoc;
+import dk.sfs.riskengine.statistics.Uniform;
 import dk.sfs.riskengine.statistics.Weibull;
 import dk.sfs.riskengine.statistics.Weibull;
 
@@ -31,6 +32,8 @@ public class StrandedByMachineFailure extends IncidentType {
 		 * TODO check for possiblity to throw anchor.
 		 */
 		Boolean anchor = true;
+		//anchor=(depth>50 && waveheight<5.0);
+		if (Uniform.random(0.0,1.0)>0.995) anchor=false;
 		if(t>1800 && anchor){
 			/*
 			 * Only if possiblity to throw anchor !!
