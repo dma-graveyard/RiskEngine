@@ -1,10 +1,13 @@
 package dk.sfs.riskengine.ais;
 
+import java.awt.geom.CubicCurve2D;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.GregorianCalendar;
 
 import org.apache.log4j.Logger;
+
+import com.mysql.jdbc.exceptions.DeadlockTimeoutRollbackMarker;
 
 import dk.frv.ais.geo.GeoLocation;
 import dk.frv.ais.message.AisMessage5;
@@ -29,7 +32,7 @@ import dk.sfs.riskengine.persistence.domain.Vessel.ShipTypeIwrap;
 
 public class RiskTarget {
 
-	public static final long CAL_PERIOD = 5 * 60l * 1000l; // 5 min
+	private static final long CAL_PERIOD = 5 * 60l * 1000l; // 5 min
 
 	private static final Logger log = Logger.getLogger(RiskTarget.class);
 
@@ -38,6 +41,7 @@ public class RiskTarget {
 	private Vessel staticInfo;
 	private Double actualDraught;
 	private AisPosition pos;
+
 	/*
 	 * Compass
 	 */
@@ -46,6 +50,7 @@ public class RiskTarget {
 	 * Knots
 	 */
 	private Double sog;
+
 	private long lastUpdated = 0;
 
 	private Point2d positionVector;
@@ -128,6 +133,7 @@ public class RiskTarget {
 					staticInfo.setShipTypeIwrap(ShipTypeIwrap.getShipTypeFromAisType(
 							new ShipTypeCargo(aisStat.getShipType()).getShipType(), length));
 					staticInfo.setNameOfShip(aisStat.getName());
+					staticInfo.setDraught(aisStat.getDraught() / 10.0);
 				} else {
 					/*
 					 * no loyds, no length ...
@@ -205,37 +211,6 @@ public class RiskTarget {
 		return System.currentTimeMillis() - lastUpdated > CAL_PERIOD;
 	}
 
-	public void updateRiskIndexes_old() {
-
-		if (!hasStaticInfo()) {
-			/*
-			 * Dont caclculate with a minimum of static data on the ship
-			 */
-			return;
-		}
-		Metoc metoc = Metoc.getMetocForPosition(pos.getGeoLocation());
-
-		/*
-		 * update risk indexes and conseqence
-		 */
-		new FireExplosion(metoc, this).save();
-		new MachineryFailure(metoc, this).save();
-
-		// requires static info
-		new StrandedByMachineFailure(metoc, this).save();
-		new StrandedByNavigationError(metoc, this).save();
-
-		new MachineryFailure(metoc, this).save();
-		new HullFailure(metoc, this).save();
-		new Foundering(metoc, this).save();
-
-		if (cpaTarget != null && cpaTarget.hasStaticInfo()) {
-			Collision col = new Collision(metoc, this, cpa, cpaTime, cpaTarget);
-			col.save();
-		}
-	}
-
-	
 	public void updateRiskIndexes() {
 
 		if (!hasStaticInfo()) {
@@ -249,99 +224,110 @@ public class RiskTarget {
 		/*
 		 * update risk indexes and conseqence
 		 */
-		double maxConsequence=0.0;
-		double maxProbability=0.0;
-		double totalProbability=0.0;
-		double totalConsequence=0.0;
-		int n=0;	//Counter. Not really used.
-		
-		FireExplosion fireExplosion=new FireExplosion(metoc, this);
-		fireExplosion.save();
-		maxConsequence=fireExplosion.getMaxConsequence();
-		if (fireExplosion.getProbability()>0.0 && fireExplosion.getConsequence()>0.0) {
-			maxProbability+=fireExplosion.getMaxProbability();
-			totalProbability+=fireExplosion.getProbability();
-			totalConsequence+=fireExplosion.getConsequence();
-			n++;
-		}
-		
-		MachineryFailure machineryFailure=new MachineryFailure(metoc, this);
-		//machineryFailure.save();
-		if (machineryFailure.getProbability()>0.0 && machineryFailure.getConsequence()>0.0) {
-			maxProbability+=machineryFailure.getMaxProbability();
-			totalProbability+=machineryFailure.getProbability();
-			totalConsequence+=machineryFailure.getConsequence();
-			n++;
-		}
-		
+		double maxConsequence = 0.0;
+		double maxProbability = 0.0;
+		double totalProbability = 0.0;
+		double totalConsequence = 0.0;
+		int n = 0; // Counter. Not really used.
+
+		// FireExplosion fireExplosion = new FireExplosion(metoc, this);
+		// fireExplosion.save();
+		// maxConsequence = fireExplosion.getMaxConsequence();
+		// if (fireExplosion.getProbability() > 0.0 &&
+		// fireExplosion.getConsequence() > 0.0) {
+		// maxProbability += fireExplosion.getMaxProbability();
+		// totalProbability += fireExplosion.getProbability();
+		// totalConsequence += fireExplosion.getConsequence();
+		// n++;
+		// }
+
+		// MachineryFailure machineryFailure = new MachineryFailure(metoc,
+		// this);
+		// // machineryFailure.save();
+		// if (machineryFailure.getProbability() > 0.0 &&
+		// machineryFailure.getConsequence() > 0.0) {
+		// maxProbability += machineryFailure.getMaxProbability();
+		// totalProbability += machineryFailure.getProbability();
+		// totalConsequence += machineryFailure.getConsequence();
+		// n++;
+		// }
+
 		// requires static info
-		StrandedByMachineFailure strandedByMachineFailure=new StrandedByMachineFailure(metoc, this);
+		StrandedByMachineFailure strandedByMachineFailure = new StrandedByMachineFailure(metoc, this);
 		strandedByMachineFailure.save();
-		if (strandedByMachineFailure.getProbability()>0.0 && strandedByMachineFailure.getConsequence()>0.0) {
-			maxProbability+=strandedByMachineFailure.getMaxProbability();
-			totalProbability+=strandedByMachineFailure.getProbability();
-			totalConsequence+=strandedByMachineFailure.getConsequence();
-			n++;
-		}
-		
-		StrandedByNavigationError strandedByNavigationError=new StrandedByNavigationError(metoc, this);
-		strandedByNavigationError.save();
-		if (strandedByNavigationError.getProbability()>0.0 && strandedByNavigationError.getConsequence()>0.0) {
-			maxProbability+=strandedByNavigationError.getMaxProbability();
-			totalProbability+=strandedByNavigationError.getProbability();
-			totalConsequence+=strandedByNavigationError.getConsequence();
+		maxConsequence = strandedByMachineFailure.getMaxConsequence();
+		if (strandedByMachineFailure.getProbability() > 0.0 && strandedByMachineFailure.getConsequence() > 0.0) {
+			maxProbability += strandedByMachineFailure.getMaxProbability();
+			totalProbability += strandedByMachineFailure.getProbability();
+			totalConsequence += strandedByMachineFailure.getConsequence();
 			n++;
 		}
 
-		HullFailure hullFailure=new HullFailure(metoc, this);
-		hullFailure.save();
-		if (hullFailure.getProbability()>0.0 && hullFailure.getConsequence()>0.0) {
-			maxProbability+=hullFailure.getMaxProbability();
-			totalProbability+=hullFailure.getProbability();
-			totalConsequence+=hullFailure.getConsequence();
+		StrandedByNavigationError strandedByNavigationError = new StrandedByNavigationError(metoc, this);
+		strandedByNavigationError.save();
+		if (strandedByNavigationError.getProbability() > 0.0 && strandedByNavigationError.getConsequence() > 0.0) {
+			maxProbability += strandedByNavigationError.getMaxProbability();
+			totalProbability += strandedByNavigationError.getProbability();
+			totalConsequence += strandedByNavigationError.getConsequence();
 			n++;
 		}
-		
-		Foundering foundering=new Foundering(metoc, this);
-		foundering.save();
-		if (foundering.getProbability()>0.0 && foundering.getConsequence()>0.0) {
-			maxProbability+=foundering.getMaxProbability();
-			totalProbability+=foundering.getProbability();
-			totalConsequence+=foundering.getConsequence();
-			n++;
-		}
-		
+
+		// HullFailure hullFailure = new HullFailure(metoc, this);
+		// hullFailure.save();
+		// if (hullFailure.getProbability() > 0.0 &&
+		// hullFailure.getConsequence() > 0.0) {
+		// maxProbability += hullFailure.getMaxProbability();
+		// totalProbability += hullFailure.getProbability();
+		// totalConsequence += hullFailure.getConsequence();
+		// n++;
+		// }
+
+		// Foundering foundering = new Foundering(metoc, this);
+		// foundering.save();
+		// if (foundering.getProbability() > 0.0 && foundering.getConsequence()
+		// > 0.0) {
+		// maxProbability += foundering.getMaxProbability();
+		// totalProbability += foundering.getProbability();
+		// totalConsequence += foundering.getConsequence();
+		// n++;
+		// }
+
 		if (cpaTarget != null && cpaTarget.hasStaticInfo()) {
 			Collision col = new Collision(metoc, this, cpa, cpaTime, cpaTarget);
 			col.save();
-			if (col.getProbability()>0.0 && col.getConsequence()>0.0) {
-				maxProbability+=col.getMaxProbability();
-				totalProbability+=col.getProbability();
-				totalConsequence+=col.getConsequence();
+			if (col.getProbability() > 0.0 && col.getConsequence() > 0.0) {
+				maxProbability += col.getMaxProbability();
+				totalProbability += col.getProbability();
+				totalConsequence += col.getConsequence();
 				n++;
 			}
 		}
 
-		
-		//Calculates the total risk index
-		//TODO: Here we let the probabilities of the different incidents be independent 
-		//of each other. We should consider how much this affects the result. 
-		if (maxProbability>1.0) {
-			maxProbability=1.0;}
-		if (totalConsequence>maxConsequence) { 
-			totalConsequence=maxConsequence;
+		// Calculates the total risk index
+		// TODO: Here we let the probabilities of the different incidents be
+		// independent
+		// of each other. We should consider how much this affects the result.
+		if (maxProbability > 1.0) {
+			maxProbability = 1.0;
 		}
-		double probabilityNormalized=0.0;
-		if (maxProbability>0.0) probabilityNormalized=totalProbability/maxProbability;
-		double consequenceNormalized=0.0;
-		if (maxConsequence>0.0) consequenceNormalized=totalConsequence/maxConsequence;
-		
-		double riskIndex=totalProbability*totalConsequence;
-		double riskIndexNormalized=0.0;
-		if (maxProbability*maxConsequence>0.0)
-			riskIndexNormalized=riskIndex/(maxProbability*maxConsequence);
-		
-		//This is just to get the total written to the db. MachineryFailure is not used elsewhere
+		if (totalConsequence > maxConsequence) {
+			totalConsequence = maxConsequence;
+		}
+		double probabilityNormalized = 0.0;
+		if (maxProbability > 0.0)
+			probabilityNormalized = totalProbability / maxProbability;
+		double consequenceNormalized = 0.0;
+		if (maxConsequence > 0.0)
+			consequenceNormalized = totalConsequence / maxConsequence;
+
+		double riskIndex = totalProbability * totalConsequence;
+		double riskIndexNormalized = 0.0;
+		if (maxProbability * maxConsequence > 0.0)
+			riskIndexNormalized = riskIndex / (maxProbability * maxConsequence);
+
+		// This is just to get the total written to the db. MachineryFailure is
+		// not used elsewhere
+		MachineryFailure machineryFailure = new MachineryFailure(metoc, this);
 		machineryFailure.setConsequence(totalConsequence);
 		machineryFailure.setProbability(totalProbability);
 		machineryFailure.setRiskIndex(riskIndex);
@@ -349,9 +335,10 @@ public class RiskTarget {
 		machineryFailure.setProbabilityNormalized(probabilityNormalized);
 		machineryFailure.setRiskIndexNormalized(riskIndexNormalized);
 		machineryFailure.save();
+
+		lastUpdated = System.currentTimeMillis();
 	}
 
-		
 	public void updateCollisionTarget(Collection<RiskTarget> targetCollection) {
 
 		if (sog == null || cog == null || sog < 0.5) {
@@ -404,27 +391,34 @@ public class RiskTarget {
 		return speedVector;
 	}
 
-	
-	
-	
 	public Ship getConsequenceShip() {
 		Ship ship1 = new Ship();
 		ship1.shiptype = staticInfo.getShipTypeIwrap();
 		Calendar cal = new GregorianCalendar();
+		
 		if (staticInfo.getYearOfBuild() != null) {
+			/*
+			 * Date from loyds table
+			 */
 			ship1.age = cal.get(Calendar.YEAR) - staticInfo.getYearOfBuild();
+			ship1.deadweight = staticInfo.getDeadweight();
+			ship1.grossTonnage = staticInfo.getGt();
+			ship1.numberOfPersons = staticInfo.getPassengers();
+			ship1.designSpeed = staticInfo.getSpeed();
+			ship1.valueOfShip = staticInfo.getNewbuildingPrice();
 		}
 		ship1.loa = staticInfo.getLength(); // m
 		ship1.breadth = staticInfo.getBreadth(); // m
-		ship1.designDraught = staticInfo.getDraught();	//TODO: The program often fails on this line!!!
-		ship1.draught = actualDraught;
+		if (staticInfo.getDraught() != null) {
+			ship1.designDraught = staticInfo.getDraught();
+		}
+		if (actualDraught != null) {
+			ship1.draught = actualDraught;
+		}
 
-		ship1.deadweight = staticInfo.getDeadweight();
-		ship1.grossTonnage = staticInfo.getGt();
-		ship1.numberOfPersons = staticInfo.getPassengers();
-		ship1.designSpeed = staticInfo.getSpeed();
+		
 		ship1.speed = sog; // knots
-		ship1.valueOfShip = staticInfo.getNewbuildingPrice();
+		
 
 		return ship1;
 	}
@@ -439,6 +433,10 @@ public class RiskTarget {
 
 	public String getNameOfShip() {
 		return staticInfo.getNameOfShip();
+	}
+
+	public double getLastUpdated() {
+		return lastUpdated;
 	}
 
 }

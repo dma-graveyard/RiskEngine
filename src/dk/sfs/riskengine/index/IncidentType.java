@@ -137,7 +137,7 @@ public abstract class IncidentType {
 	private void setProbability() {
 		// requires static info
 		double c = getCasualtyRate(vessel.getShipTypeIwrap(), vessel.getLength());
-		c*=(RiskTarget.CAL_PERIOD / (365.25 * 24d * 60d));
+		c*=((System.currentTimeMillis() - vessel.getLastUpdated() )/ (365.25 * 24d * 60d*60d*1000d));
 		maxProbability = c*getMaxAgeFactor()*getMaxFlagFactor()*getMaxWindcurrentFactor()*getMaxVisibilityFactor() * getMaxExposure();
 
 		if (vessel.getYearOfBuild() != null) {
