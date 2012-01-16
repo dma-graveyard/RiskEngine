@@ -66,14 +66,8 @@ public abstract class IncidentType {
 	 * @param target
 	 */
 	public IncidentType(Metoc metoc, RiskTarget target) {
-		super();
-		this.vessel = target;
-		this.metoc = metoc;
-		setProbability();
-		setConsequence();
+		this(metoc, target, null);
 		
-		riskIndex=probability*consequence;
-		riskIndexNormalized=probabilityNormalized*consequenceNormalized;
 	}
 
 	/**
