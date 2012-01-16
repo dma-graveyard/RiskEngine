@@ -52,7 +52,7 @@ public class PoweredGrounding {
 		if (ship1.bunkerTonnage<0.0) ship1.bunkerTonnage=0.0;
 		if(ship1.cargoTonnage<0.0) ship1.cargoTonnage=0.0;
 		
-		materialCost+=500.0*ship1.loa*(1e-6);	//mill. $. A grounding allways cost something eventhough no damage occurs. Inspection+waiting time;
+		materialCost+=500.0*ship1.loa*(1e-6);	//mill. $. A grounding always cost something eventhough no damage occurs. Inspection+waiting time;
 	}
 	
 	
@@ -64,20 +64,27 @@ public class PoweredGrounding {
 			
 		damageLength=0.2*Math.log(0.3*ship1.speed);	//fraction of the ship length. We will need a better estimate
 		damageLength*=Uniform.random(0.5, 1.5);
-		if (softBottom) damageLength*=Exponential.random(5.0);	//Reduce the damage length if soft bottom
+		if (softBottom) {
+			double f=Exponential.random(5.0); //Reduce the damage length if soft bottom
+			if (f<0.01) f=0.01;
+			if (f>0.5) f=0.5;
+			damageLength*=f;
+		}
 		
-		double lambda=-20/ship1.speed;
+		//Penetration
+		double lambda=-20.0/ship1.speed;
 		penetration=Math.exp(lambda);	//Penetration as fraction of draught. Should be height
 		penetration*=Uniform.random(0.5, 1.5);
 		if (softBottom) {
 			double f=Exponential.random(5.0);
-			if (f>1.0) f=1.0;
+			if (f<0.01) f=0.01;
+			if (f>0.5) f=0.5;
 			penetration*=f;
 		}
 		
 		if (damageLength>0.35 && penetration>0.5 && Uniform.random(0.0, 1.0)>0.5) {
 			sinks=true;
-			timeToSink=Uniform.random(0.5, 5.0);	//Need better estimate
+			timeToSink=Uniform.random(0.5, 5.0);	//hours
 		}
 		
 		estimateSpill(ship1, waveHeight);
@@ -100,7 +107,8 @@ public class PoweredGrounding {
 		}
 		
 		//The bunker tanks might also be hit
-		if (penetration>0.05 && Uniform.random(0.0, 1.0)>0.5) {
+		boolean trim=(Uniform.random(0.0,1.0)>0.5);
+		if (penetration>0.05 && trim) {
 			fueltype1Spilled=Uniform.random(0.0, 0.3)*ship1.fuelType1Fraction*ship1.bunkerTonnage;
 			fueltype2Spilled=Uniform.random(0.0, 0.3)*ship1.fuelType2Fraction*ship1.bunkerTonnage;
 		}
@@ -119,6 +127,7 @@ public class PoweredGrounding {
 	private double estimateMaterialCost(Ship ship1) {
 		materialCost=0.2*damageLength*ship1.valueOfShip;	//Todo: get some infomation on this
 		materialCost+=0.2*damageLength*ship1.valueOfCargo;
+		if (sinks) materialCost=ship1.valueOfShip+ship1.valueOfCargo;
 		return materialCost;
 	}
 	

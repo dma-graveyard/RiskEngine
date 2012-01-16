@@ -41,7 +41,8 @@ public class DriftGrounding {
 	
 	
 	public void calcConsequences(Ship ship1, double waveHeight, boolean softBottom) {
-		estimateSpill(ship1, waveHeight, softBottom);
+		estimateDamage(ship1, waveHeight, softBottom);
+		estimateSpill(ship1);
 		estimateLossOflife(ship1);
 		estimateMaterialCost(ship1);
 		
@@ -56,52 +57,46 @@ public class DriftGrounding {
 	}
 	
 	
-	private void estimateSpill(Ship ship1, double waveHeight, boolean softBottom) {
-		
+private void estimateDamage(Ship ship1, double waveHeight, boolean softBottom) {
+	
 		//Totally undocumented, but hopefully not totally wrong.
-		//ToDo: Estimate if it sinks and the damage to cargo
+		double f=0.0;
 		if (waveHeight<2) {
-			double f=Uniform.random(0.0, 0.3);
-			cargoSpilled=ship1.cargoTonnage*f;
-			fueltype1Spilled=ship1.bunkerTonnage*ship1.fuelType1Fraction*f;
-			fueltype2Spilled=ship1.bunkerTonnage*ship1.fuelType2Fraction*f;
-			hullDamage=f;
-			cargoDamage=f;
+			f=Uniform.random(0.0, 0.3);
 		}
+		
 		if (waveHeight>=2 && waveHeight<5) {
-			double f=Uniform.random(0.1, 0.5);
-			cargoSpilled=ship1.cargoTonnage*f;
-			fueltype1Spilled=ship1.bunkerTonnage*ship1.fuelType1Fraction*f;
-			fueltype2Spilled=ship1.bunkerTonnage*ship1.fuelType2Fraction*f;
-			hullDamage=f;
-			cargoDamage=f;
+			f=Uniform.random(0.1, 0.5);
 		}
+
 		if (waveHeight>=5) {
-			double f=Uniform.random(0.2, 0.8);
-			cargoSpilled=ship1.cargoTonnage*f;
-			fueltype1Spilled=ship1.bunkerTonnage*ship1.fuelType1Fraction*f;
-			fueltype2Spilled=ship1.bunkerTonnage*ship1.fuelType2Fraction*f;
-			hullDamage=f;
-			cargoDamage=f;
+			f=Uniform.random(0.3, 0.9);
 		}
 		
 		if (softBottom) {
-			double f=Exponential.random(10.0);	//ToDo: Find a better relation
-			if (f>1.0) f=1.0;
-			cargoSpilled*=f;
-			fueltype1Spilled*=f;
-			fueltype2Spilled*=f;
-			hullDamage*=f;
-			cargoDamage*=f;
+			double f1=Exponential.random(10.0);	//ToDo: Find a better relation
+			if (f1<0.01) f1=0.01;
+			if (f1>0.5) f1=0.5;
+			f*=f1;
 		}
-		
-		if (ship1.shiptype!=ShipTypeIwrap.CRUDE_OIL_TANKER && ship1.shiptype!=ShipTypeIwrap.OIL_PRODUCTS_TANKER) {
-			cargoSpilled=0.0;
-		}
+
+		hullDamage*=f;
+		cargoDamage*=f;
 		
 		if (hullDamage>0.5) {
 			sinks=true;
-			timeToSink=Uniform.random(1.0,5.0);
+			timeToSink=Uniform.random(1.0,5.0);	//hours
+		}
+	}
+	
+
+	private void estimateSpill(Ship ship1) {
+		cargoSpilled=ship1.cargoTonnage*cargoDamage;
+		fueltype1Spilled=ship1.bunkerTonnage*ship1.fuelType1Fraction*hullDamage;
+		fueltype2Spilled=ship1.bunkerTonnage*ship1.fuelType2Fraction*hullDamage;
+			
+		if (ship1.shiptype!=ShipTypeIwrap.CRUDE_OIL_TANKER && ship1.shiptype!=ShipTypeIwrap.OIL_PRODUCTS_TANKER) {
+			cargoSpilled=0.0;
 		}
 	}
 	
