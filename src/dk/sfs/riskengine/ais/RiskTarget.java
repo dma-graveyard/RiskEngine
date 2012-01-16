@@ -1,27 +1,20 @@
 package dk.sfs.riskengine.ais;
 
-import java.awt.geom.CubicCurve2D;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.GregorianCalendar;
 
 import org.apache.log4j.Logger;
 
-import com.mysql.jdbc.exceptions.DeadlockTimeoutRollbackMarker;
-
 import dk.frv.ais.geo.GeoLocation;
 import dk.frv.ais.message.AisMessage5;
 import dk.frv.ais.message.AisPosition;
 import dk.frv.ais.message.AisPositionMessage;
 import dk.frv.ais.message.ShipTypeCargo;
-import dk.frv.ais.reader.AisTcpReader;
 import dk.sfs.riskengine.consequence.Ship;
 import dk.sfs.riskengine.geometry.CPA;
 import dk.sfs.riskengine.geometry.Point2d;
 import dk.sfs.riskengine.index.Collision;
-import dk.sfs.riskengine.index.FireExplosion;
-import dk.sfs.riskengine.index.Foundering;
-import dk.sfs.riskengine.index.HullFailure;
 import dk.sfs.riskengine.index.MachineryFailure;
 import dk.sfs.riskengine.index.StrandedByMachineFailure;
 import dk.sfs.riskengine.index.StrandedByNavigationError;
@@ -32,7 +25,7 @@ import dk.sfs.riskengine.persistence.domain.Vessel.ShipTypeIwrap;
 
 public class RiskTarget {
 
-	private static final long CAL_PERIOD = 5 * 60l * 1000l; // 5 min
+	private static final long CAL_PERIOD = 1 * 60l * 1000l; // 5 min
 
 	private static final Logger log = Logger.getLogger(RiskTarget.class);
 
@@ -220,7 +213,11 @@ public class RiskTarget {
 			return;
 		}
 		Metoc metoc = Metoc.getMetocForPosition(pos.getGeoLocation());
-
+		System.out.println(mmsi);
+		if(mmsi == 355925000l){
+			int i= 0;
+			i++;
+		}
 		/*
 		 * update risk indexes and conseqence
 		 */

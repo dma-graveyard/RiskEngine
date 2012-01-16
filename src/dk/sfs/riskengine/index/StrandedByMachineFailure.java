@@ -26,7 +26,17 @@ public class StrandedByMachineFailure extends IncidentType {
 	public double getExposure() {
 		Point2d drift = estimateCombinedWindCurrentDrift();
 		double t = getTimeToGrounding(drift.x, drift.y);
-
+		
+		/*
+		 * TODO check for possiblity to throw anchor.
+		 */
+		Boolean anchor = true;
+		if(t>1800 && anchor){
+			/*
+			 * Only if possiblity to throw anchor !!
+			 */
+			return 0.0;
+		}
 		if (t >= 0) {
 			// TODO Estimate the probability that the ship can drop its anchor
 			double repairTime = Weibull.random(1.1, 5.35) * 3600.0; // Seconds

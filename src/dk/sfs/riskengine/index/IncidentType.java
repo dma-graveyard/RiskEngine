@@ -322,6 +322,7 @@ public abstract class IncidentType {
 
 	protected double getTimeToGrounding(double speed, double direction) {
 
+		
 		DepthPoint ground = DepthPoint.findGroundingPoint(vessel.getPos(), direction, vessel.getDraught());
 		if (ground == null) {
 			/*

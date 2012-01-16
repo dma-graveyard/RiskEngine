@@ -22,7 +22,7 @@ public class StrandedByNavigationError extends IncidentType {
 	@Override
 	public double getExposure() {
 		
-		double t=getTimeToGrounding( vessel.getCog(), vessel.getSog());
+		double t=getTimeToGrounding(vessel.getSog(), vessel.getCog());
 	
 		if (t<3600) {
 			return 	Math.exp(-Math.abs(t/60.0)*0.1);	//Using the same as tcpa
