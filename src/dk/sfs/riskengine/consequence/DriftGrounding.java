@@ -60,15 +60,7 @@ public class DriftGrounding {
 		
 		//Totally undocumented, but hopefully not totally wrong.
 		//ToDo: Estimate if it sinks and the damage to cargo
-		if (waveHeight<2 && Uniform.random(0.0, 1.0)>0.8) {
-			double f=Uniform.random(0.0, 0.1);
-			cargoSpilled=ship1.cargoTonnage*f;
-			fueltype1Spilled=ship1.bunkerTonnage*ship1.fuelType1Fraction*f;
-			fueltype2Spilled=ship1.bunkerTonnage*ship1.fuelType2Fraction*f;
-			hullDamage=f;
-			cargoDamage=f;
-		}
-		if (waveHeight>=2 && waveHeight<5 && Uniform.random(0.0, 1.0)>0.5) {
+		if (waveHeight<2) {
 			double f=Uniform.random(0.0, 0.3);
 			cargoSpilled=ship1.cargoTonnage*f;
 			fueltype1Spilled=ship1.bunkerTonnage*ship1.fuelType1Fraction*f;
@@ -76,8 +68,16 @@ public class DriftGrounding {
 			hullDamage=f;
 			cargoDamage=f;
 		}
-		if (waveHeight>=5 && Uniform.random(0.0, 1.0)>0.2) {
-			double f=Uniform.random(0.2, 0.7);
+		if (waveHeight>=2 && waveHeight<5) {
+			double f=Uniform.random(0.1, 0.5);
+			cargoSpilled=ship1.cargoTonnage*f;
+			fueltype1Spilled=ship1.bunkerTonnage*ship1.fuelType1Fraction*f;
+			fueltype2Spilled=ship1.bunkerTonnage*ship1.fuelType2Fraction*f;
+			hullDamage=f;
+			cargoDamage=f;
+		}
+		if (waveHeight>=5) {
+			double f=Uniform.random(0.2, 0.8);
 			cargoSpilled=ship1.cargoTonnage*f;
 			fueltype1Spilled=ship1.bunkerTonnage*ship1.fuelType1Fraction*f;
 			fueltype2Spilled=ship1.bunkerTonnage*ship1.fuelType2Fraction*f;
@@ -86,7 +86,8 @@ public class DriftGrounding {
 		}
 		
 		if (softBottom) {
-			double f=Exponential.random(500.0);	//ToDo: Find a better relation
+			double f=Exponential.random(10.0);	//ToDo: Find a better relation
+			if (f>1.0) f=1.0;
 			cargoSpilled*=f;
 			fueltype1Spilled*=f;
 			fueltype2Spilled*=f;
@@ -98,7 +99,7 @@ public class DriftGrounding {
 			cargoSpilled=0.0;
 		}
 		
-		if (hullDamage>0.5 && Uniform.random()>0.5) {
+		if (hullDamage>0.5) {
 			sinks=true;
 			timeToSink=Uniform.random(1.0,5.0);
 		}

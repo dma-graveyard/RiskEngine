@@ -69,9 +69,13 @@ public class PoweredGrounding {
 		double lambda=-20/ship1.speed;
 		penetration=Math.exp(lambda);	//Penetration as fraction of draught. Should be height
 		penetration*=Uniform.random(0.5, 1.5);
-		if (softBottom) penetration*=Exponential.random(5.0);
+		if (softBottom) {
+			double f=Exponential.random(5.0);
+			if (f>1.0) f=1.0;
+			penetration*=f;
+		}
 		
-		if (damageLength>0.4 && penetration>0.5 && Uniform.random(0.0, 1.0)>0.5) {
+		if (damageLength>0.35 && penetration>0.5 && Uniform.random(0.0, 1.0)>0.5) {
 			sinks=true;
 			timeToSink=Uniform.random(0.5, 5.0);	//Need better estimate
 		}
@@ -94,6 +98,13 @@ public class PoweredGrounding {
 			if (waveHeight>=2 && waveHeight<5 && Uniform.random(0.0, 1.0)>0.3) cargoSpilled*=Uniform.random(0.5, 0.9);	//>0.3 attempts to model the double bottom
 			if (waveHeight>=5 && Uniform.random(0.0, 1.0)>0.05) cargoSpilled*=Uniform.random(0.8, 1.0);
 		}
+		
+		//The bunker tanks might also be hit
+		if (penetration>0.05 && Uniform.random(0.0, 1.0)>0.5) {
+			fueltype1Spilled=Uniform.random(0.0, 0.3)*ship1.fuelType1Fraction*ship1.bunkerTonnage;
+			fueltype2Spilled=Uniform.random(0.0, 0.3)*ship1.fuelType2Fraction*ship1.bunkerTonnage;
+		}
+		
 		return;
 	}
 	
