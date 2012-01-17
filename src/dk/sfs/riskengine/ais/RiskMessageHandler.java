@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 import dk.frv.ais.geo.GeoLocation;
 import dk.frv.ais.handler.IAisHandler;
 import dk.frv.ais.message.AisMessage;
+import dk.frv.ais.message.AisMessage18;
 import dk.frv.ais.message.AisMessage5;
 import dk.frv.ais.message.AisPositionMessage;
 import dk.sfs.riskengine.geometry.CPA;
@@ -40,6 +41,7 @@ public class RiskMessageHandler implements IAisHandler {
 	@Override
 	public void receive(AisMessage aisMessage) {
 
+		
 		if (aisMessage instanceof AisMessage5) {
 
 			/*
@@ -50,48 +52,59 @@ public class RiskMessageHandler implements IAisHandler {
 				AisMessage5 staticMsg = (AisMessage5) aisMessage;
 				target.setStaticInfo(staticMsg);
 			}
+			
 		} else if (aisMessage instanceof AisPositionMessage) {
 
 			AisPositionMessage msg = (AisPositionMessage) aisMessage;
+			process(msg.getPos().getGeoLocation(), msg.getCog(), msg.getSog(), aisMessage);
+		}
+		else if (aisMessage instanceof AisMessage18) {
 
-			// check the ais target is within the monitored area.
-			GeoLocation pos = msg.getPos().getGeoLocation();
-
-			if (pos.getLatitude() < latMin || latMax < pos.getLatitude() || pos.getLongitude() < lonMin
-					|| lonMax < pos.getLongitude()) {
-
-				// ship is out of zone - remove from zone map
-				map.remove(msg.getUserId());
-				return;
-			}
-
-			// Ship in the zone
-			try {
-				RiskTarget target = map.get(msg.getUserId());
-
-				if (target == null) {
-					target = new RiskTarget(msg);
-					map.put(aisMessage.getUserId(), target);
-				}
-
-				target.setPos(msg.getPos());
-				if (msg.getCog() != 3600) {
-					target.setCog(msg.getCog() / 10d);
-				}
-				if (msg.getSog() != 1023) {
-					target.setSog(msg.getSog() / 10d);
-				}
-
-				if (target.timeToUpdate()) {
-					target.updateCollisionTarget(map.values());
-					target.updateRiskIndexes();
-				}
-
-			} catch (Exception e) {
-				log.error("Trouble !", e);
-			}
+			AisMessage18 msg = (AisMessage18) aisMessage;
+			process(msg.getPos().getGeoLocation(), msg.getCog(), msg.getSog(), aisMessage);
 		}
 
+	}
+	private void process(GeoLocation pos, Integer cog ,Integer sog, AisMessage aisMessage){
+
+		if (pos.getLatitude() < latMin || latMax < pos.getLatitude() || pos.getLongitude() < lonMin
+				|| lonMax < pos.getLongitude()) {
+
+			// ship is out of zone - remove from zone map
+			map.remove(aisMessage.getUserId());
+			return;
+		}
+		if(aisMessage instanceof AisPositionMessage){
+			int i =0;
+			i++;
+		}
+		// Ship in the zone
+		try {
+			RiskTarget target = map.get(aisMessage.getUserId());
+
+			if (target == null) {
+				target = new RiskTarget(aisMessage);
+				map.put(aisMessage.getUserId(), target);
+			}
+
+			target.setPos(pos);
+			if (cog != 3600) {
+				target.setCog(cog / 10d);
+			}
+			if (sog != 1023) {
+				target.setSog(sog / 10d);
+			}
+
+			if (target.timeToUpdate()) {
+				target.updateCollisionTarget(map.values());
+				if(aisMessage instanceof AisPositionMessage){
+					target.updateRiskIndexes();
+				}
+			}
+
+		} catch (Exception e) {
+			log.error("Trouble !", e);
+		}
 	}
 
 	public void setLatMin(long latMin) {

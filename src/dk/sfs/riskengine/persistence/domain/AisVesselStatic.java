@@ -2,6 +2,7 @@ package dk.sfs.riskengine.persistence.domain;
 
 import org.apache.ibatis.session.SqlSession;
 
+import dk.sfs.riskengine.ais.RiskTarget.AisClass;
 import dk.sfs.riskengine.persistence.mapper.AisVesselStaticMapper;
 import dk.sfs.riskengine.persistence.mapper.DBSessionFactory;
 
@@ -20,14 +21,22 @@ public class AisVesselStatic {
     private Long imo;
     private Integer draught;
     
-    public static AisVesselStatic findByMmsi(Long mmsi) {
+	public static AisVesselStatic findByMmsi(Long mmsi, AisClass aisClass) {
 
 		SqlSession sess = DBSessionFactory.getSession();
 
 		try {
 			AisVesselStaticMapper mapper = sess.getMapper(AisVesselStaticMapper.class);
+			switch (aisClass) {
+			case A:
+				return mapper.selectStaticClassA(mmsi);	
+			case B:
+				return mapper.selectStaticClassB(mmsi);
+				
+			default:
+				return null;
+			}
 			
-			return mapper.selectByPrimaryKey(mmsi);
 		} finally {
 			sess.close();
 		}

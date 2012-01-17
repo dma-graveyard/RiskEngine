@@ -7,6 +7,7 @@ import java.util.GregorianCalendar;
 import org.apache.log4j.Logger;
 
 import dk.frv.ais.geo.GeoLocation;
+import dk.frv.ais.message.AisMessage;
 import dk.frv.ais.message.AisMessage5;
 import dk.frv.ais.message.AisPosition;
 import dk.frv.ais.message.AisPositionMessage;
@@ -25,7 +26,7 @@ import dk.sfs.riskengine.persistence.domain.Vessel.ShipTypeIwrap;
 
 public class RiskTarget {
 
-	private static final long CAL_PERIOD = 1 * 60l * 1000l; // 5 min
+	private static final long CAL_PERIOD = 1 * 60l * 1000l; // 1 min
 
 	private static final Logger log = Logger.getLogger(RiskTarget.class);
 
@@ -33,8 +34,14 @@ public class RiskTarget {
 	private Long imo;
 	private Vessel staticInfo;
 	private Double actualDraught;
-	private AisPosition pos;
+	private GeoLocation pos;
 
+	public enum AisClass {
+		A, B;
+
+	}
+
+	private AisClass aisClass;
 	/*
 	 * Compass
 	 */
@@ -56,14 +63,19 @@ public class RiskTarget {
 	private Double cpaTime;
 	private Double cpa;
 
-	public RiskTarget(AisPositionMessage msg) {
+	public RiskTarget(AisMessage msg) {
 		super();
+		if (msg instanceof AisPositionMessage) {
+			aisClass = AisClass.A;
+		} else {
+			aisClass = AisClass.B;
+		}
 		mmsi = msg.getUserId();
 
 		/*
 		 * Get info from ais static
 		 */
-		AisVesselStatic aisStat = AisVesselStatic.findByMmsi(mmsi);
+		AisVesselStatic aisStat = AisVesselStatic.findByMmsi(mmsi, aisClass);
 		updateStaticInfo(aisStat);
 
 	}
@@ -117,34 +129,31 @@ public class RiskTarget {
 				/*
 				 * No info from loyds, get info from ais
 				 */
-				double length = (aisStat.getDimBow() + aisStat.getDimStern()) / 10.0;
-				if (length < 1.0) {
+				double length = (aisStat.getDimBow() + aisStat.getDimStern());
 
-					staticInfo = new Vessel();
-					staticInfo.setLength(Double.valueOf(length));
-					staticInfo.setBreadth(Double.valueOf(aisStat.getDimPort() + aisStat.getDimStarboard()) / 10.0);
-					staticInfo.setShipTypeIwrap(ShipTypeIwrap.getShipTypeFromAisType(
-							new ShipTypeCargo(aisStat.getShipType()).getShipType(), length));
-					staticInfo.setNameOfShip(aisStat.getName());
+				staticInfo = new Vessel();
+				staticInfo.setLength(Double.valueOf(length));
+				staticInfo.setBreadth(Double.valueOf(aisStat.getDimPort() + aisStat.getDimStarboard()));
+				staticInfo.setShipTypeIwrap(ShipTypeIwrap.getShipTypeFromAisType(
+						new ShipTypeCargo(aisStat.getShipType()).getShipType(), length));
+				staticInfo.setNameOfShip(aisStat.getName());
+				if (aisStat.getDraught() != null) {
 					staticInfo.setDraught(aisStat.getDraught() / 10.0);
-				} else {
-					/*
-					 * no loyds, no length ...
-					 */
-					return;
 				}
 			}
 			/*
 			 * Update actual draught
 			 */
-			actualDraught = aisStat.getDraught() / 10.0;
+			if (aisStat.getDraught() != null) {
+				actualDraught = aisStat.getDraught() / 10.0;
+			}
 		}
 
 	}
 
-	public void setPos(AisPosition pos) {
+	public void setPos(GeoLocation pos) {
 		this.pos = pos;
-		positionVector = CPA.getPositionVector(pos.getGeoLocation());
+		positionVector = CPA.getPositionVector(pos);
 	}
 
 	public ShipTypeIwrap getShipTypeIwrap() {
@@ -168,15 +177,15 @@ public class RiskTarget {
 	}
 
 	public double getLongitude() {
-		return pos.getGeoLocation().getLongitude();
+		return pos.getLongitude();
 	}
 
 	public double getLatitude() {
-		return pos.getGeoLocation().getLatitude();
+		return pos.getLatitude();
 	}
 
 	public GeoLocation getGeoLocation() {
-		return pos.getGeoLocation();
+		return pos;
 	}
 
 	public Double getSog() {
@@ -189,7 +198,7 @@ public class RiskTarget {
 	}
 
 	public GeoLocation getPos() {
-		return pos.getGeoLocation();
+		return pos;
 	}
 
 	public Double getCog() {
@@ -212,12 +221,12 @@ public class RiskTarget {
 			 */
 			return;
 		}
-		Metoc metoc = Metoc.getMetocForPosition(pos.getGeoLocation());
-		System.out.println(mmsi);
-		if(mmsi == 355925000l){
-			int i= 0;
-			i++;
-		}
+		Metoc metoc = Metoc.getMetocForPosition(pos);
+		 System.out.println(mmsi);
+		 if(mmsi == 219007589l){
+		 int i= 0;
+		 i++;
+		 }
 		/*
 		 * update risk indexes and conseqence
 		 */
@@ -392,7 +401,7 @@ public class RiskTarget {
 		Ship ship1 = new Ship();
 		ship1.shiptype = staticInfo.getShipTypeIwrap();
 		Calendar cal = new GregorianCalendar();
-		
+
 		if (staticInfo.getYearOfBuild() != null) {
 			/*
 			 * Date from loyds table
@@ -413,9 +422,7 @@ public class RiskTarget {
 			ship1.draught = actualDraught;
 		}
 
-		
 		ship1.speed = sog; // knots
-		
 
 		return ship1;
 	}

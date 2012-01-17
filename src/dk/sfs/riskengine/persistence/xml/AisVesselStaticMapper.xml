@@ -17,13 +17,22 @@
   </resultMap>
   
  
-  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+  <select id="selectStaticClassA" resultMap="BaseResultMap" parameterType="java.lang.Long" >
     
     select 
  	avs.mmsi, name, ship_type, cargo, dim_bow, dim_stern, dim_port, dim_starboard, draught, imo
     from ais_vessel_static avs, ais_class_a_static acas 
     where avs.mmsi = #{mmsi,jdbcType=INTEGER}
     and avs.mmsi = acas.mmsi
+    
+  </select>
+  
+   <select id="selectStaticClassB" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    
+    select 	avs.mmsi, name, ship_type, cargo, dim_bow, dim_stern, dim_port, dim_starboard
+    from ais_vessel_static avs 
+    where avs.mmsi = #{mmsi,jdbcType=INTEGER}
+    
     
   </select>
 
